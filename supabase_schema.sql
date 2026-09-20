@@ -1,0 +1,109 @@
+-- ================================================================
+-- TECHXERA HACKFEST '26 // SUPABASE DATABASE INITIALIZATION SCHEMA
+-- Run this script in your Supabase SQL Editor (supabase.com/dashboard)
+-- ================================================================
+
+-- 1. CREATE REGISTRATIONS TABLE
+CREATE TABLE IF NOT EXISTS public.registrations (
+    id TEXT PRIMARY KEY,
+    team_name TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    college_or_org TEXT,
+    selected_challenge TEXT,
+    team_members JSONB DEFAULT '[]'::jsonb,
+    github_or_portfolio TEXT,
+    submitted_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. CREATE SITE CONTENT TABLE
+CREATE TABLE IF NOT EXISTS public.site_content (
+    id TEXT PRIMARY KEY DEFAULT 'hackverse_2026',
+    content JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 3. ENABLE ROW LEVEL SECURITY (RLS)
+ALTER TABLE public.registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
+
+-- 4. POLICIES FOR REGISTRATIONS
+-- Allow anyone to insert their registration ticket
+DROP POLICY IF EXISTS "Public can insert registrations" ON public.registrations;
+CREATE POLICY "Public can insert registrations" 
+ON public.registrations FOR INSERT 
+TO anon, authenticated 
+WITH CHECK (true);
+
+-- Allow reading registrations
+DROP POLICY IF EXISTS "Public can read registrations" ON public.registrations;
+CREATE POLICY "Public can read registrations" 
+ON public.registrations FOR SELECT 
+TO anon, authenticated 
+USING (true);
+
+-- Allow updating registrations
+DROP POLICY IF EXISTS "Public can update registrations" ON public.registrations;
+CREATE POLICY "Public can update registrations" 
+ON public.registrations FOR UPDATE 
+TO anon, authenticated 
+USING (true);
+
+-- Allow deleting registrations
+DROP POLICY IF EXISTS "Public can delete registrations" ON public.registrations;
+CREATE POLICY "Public can delete registrations" 
+ON public.registrations FOR DELETE 
+TO anon, authenticated 
+USING (true);
+
+-- 5. POLICIES FOR SITE CONTENT
+-- Allow anyone to read site content
+DROP POLICY IF EXISTS "Public can read site_content" ON public.site_content;
+CREATE POLICY "Public can read site_content" 
+ON public.site_content FOR SELECT 
+TO anon, authenticated 
+USING (true);
+
+-- Allow admin / public to insert or update site content
+DROP POLICY IF EXISTS "Public can write site_content" ON public.site_content;
+CREATE POLICY "Public can write site_content" 
+ON public.site_content FOR ALL 
+TO anon, authenticated 
+USING (true)
+WITH CHECK (true);
+
+-- 6. INSERT INITIAL SITE CONTENT (UPSERT)
+INSERT INTO public.site_content (id, content, updated_at)
+VALUES ('hackverse_2026', '{"eventInfo":{"name":"TECHXERA HACKFEST ''26","shortName":"HACKFEST ''26","titleGothic":"𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊","titleAccent":"''𝟚𝟞","tagline":"BUILD. BREAK. INNOVATE.","dates":"september 25– 25, 2026","venue":"Government College of Engineering Kalahandi","location":"Bhawanipatna, Odisha","prizePool":"₹10,000","hours":24,"participants":200,"edition":"EDITION 04"},"hero":{"titleGothic":"𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊","titleAccent":"''𝟚𝟞","subheadline":"WHERE WARRIORS CODE // 12 HOURS OF CODE, HARDWARE & INTELLIGENCE","description":"Assemble your squad of 2 to 4 engineers at the Government College of Engineering Kalahandi bamboo arena. Non-stop battleground programming, classified quests, and ₹10,000+ bounty pool.","seatsClaimed":18,"seatsTotal":200,"capText":"92% CAP // WARRIORS STANDING BY","showProgressBar":true,"joinBattleLabel":"JOIN THE BATTLE","battlegroundsLabel":"BATTLEGROUNDS","timelineLabel":"TIMELINE"},"navbar":{"brandName":"HACKVERSE","brandAccent":"''26","brandSubline":"BATTLEGROUND // GCEK","siteLogoUrl":""},"mission":{"badge":"INTEL BRIEF // THE CODEBREAKERS DOCTRINE","title":"The Arena of Pure Engineering","description":"Forged in the heart of Kalahandi, HackVerse ''26 unites 200 of the nation''s elite developers, security researchers, and systems architects for an unrelenting 12-hour sprint. Build real solutions, challenge the status quo, and forge your legacy.","pillar1Title":"BATTLE TESTED","pillar1Desc":"Live evaluation under intense pressure and real-time adversary simulations.","pillar2Title":"NO SLEEP CODE","pillar2Desc":"12 continuous hours of architecture design, prototyping, and deployment.","pillar3Title":"REAL IMPACT","pillar3Desc":"Solve mission-critical problem statements with industry mentors and partners.","communityBadge":"OFFICIAL COMMUNITY PORTAL","communityTitle":"JOIN THE CODEBREAKERS GUILD","communityDesc":"Connect with 1,500+ student developers, alumni mentors, open-source contributors, and competitive hackathon warriors.","communityBtnLabel":"CLUB WEBSITE","communityUrl":"https://techxeraedu.vercel.app","communityScheduleBtnLabel":"VIEW SCHEDULE","communityScheduleUrl":"#timeline"},"stats":{"hours":"12H","hoursLabel":"COMBAT DURATION","hoursSub":"NON-STOP SPRINT","prizePool":"₹11","prizePoolLabel":"TOTAL BOUNTY POOL","prizePoolSub":"GRANTS & CREDITS","hackers":"200+","hackersLabel":"ELITE WARRIORS","hackersSub":"SELECTIVE SCREENING","tracks":"5","tracksLabel":"BATTLEGROUND TRACKS","tracksSub":"CROSS-DOMAIN"},"prizes":{"poolTotal":"₹10,000+","first":"₹5000","firstSubtitle":"+ VC BACKING & INCUBATION","firstDesc":"The grand victor of HackVerse ''26. Direct cash grant wire, official HackVerse champion trophy, and VC investor term-sheet screening.","second":"₹3000","secondSubtitle":"+ CLOUD CREDITS","secondDesc":"Runner up champions of the arena. Direct cash wire, cloud compute grant package, and silver trophy.","third":"₹2000","thirdSubtitle":"+ MENTORSHIP & SWAG","thirdDesc":"Second runner up. Direct cash bounty wire, hardware developer toolkits, and bronze trophy.","special":"","specialSubtitle":"TRACK BOUNTIES","specialDesc":"Best All-Women Squad, Best Freshman Hack, Best Hardware Integration, and Community Choice."},"teams":[{"id":"team-01","number":"01","name":"NEURAL NEXUS","category":"AI & MACHINE LEARNING"},{"id":"team-02","number":"02","name":"CYBER PHANTOM","category":"CYBER SECURITY"},{"id":"team-03","number":"03","name":"AEROBOTIX","category":"IOT & ROBOTICS"}],"faq":[{"id":"faq-1","question":"Who can enlist in HackVerse ''26?","answer":"Any undergraduate or postgraduate college student, as well as recent graduates and independent researchers. Teams must be 2 to 4 warriors.","category":"Eligibility"},{"id":"faq-2","question":"Is there any registration or entry fee?","answer":"Zero fee. HackVerse ''26 is 100% free to enter. All meals, hydration, snacks, combat badges, and swag are provided free of cost to shortlisted squads.","category":"Fees"},{"id":"faq-3","question":"What is the team size and composition constraint?","answer":"Teams must consist of 2 to 4 members. Inter-college teams are fully permitted and encouraged.","category":"Teams"},{"id":"faq-4","question":"Where is the physical battleground located?","answer":"The battleground is hosted at the Government College of Engineering Kalahandi (GCEK), Bhawanipatna, Odisha. High-speed networking, power grids, and designated rest dorms will be active.","category":"Logistics"},{"id":"faq-5","question":"Can I participate solo if I don''t have a clan?","answer":"Yes! You can register individually, and our harmonization session during check-in will match you with complementary warriors looking for squad mates.","category":"Teams"},{"id":"faq-6","question":"What tech stacks are permitted in the quests?","answer":"All modern stacks are allowed: Rust, Python, Go, TypeScript, C++, Solidity, ROS, PyTorch, React, Flutter, and embedded firmwares. You must write the code during the 24-hour sprint.","category":"Tech"}],"footer":{"contactEmail":"codebreakers@gcekbpatna.ac.in","contactPhone":"+91 98765 43210","address":"Government College of Engineering Kalahandi, Bhawanipatna, Odisha - 766002","copyright":"© 2026 HACKVERSE // CODEBREAKERS CLUB GCEK. ALL RIGHTS RESERVED.","systemStatusText":"SYSTEM STATUS: REGISTRATIONS OPEN","discord":"https://discord.gg","github":"https://github.com","twitter":"https://twitter.com","linkedin":"https://linkedin.com"},"registrationForm":{"isOpen":true,"useGoogleForm":true,"googleFormUrl":"https://forms.google.com","title":"WARRIOR REGISTRATION // SQUAD ENLISTMENT","subtitle":"Enlist your squad for HackVerse ''26. Offline battleground at GCEK Kalahandi.","noticeBanner":"⚡ FREE REGISTRATION — MEALS, SWAGS & DORM ACCOMMODATION PROVIDED","closedMessage":"Registrations for HackVerse ''26 are currently closed. Check back soon or contact support.","maxMembers":4,"allowSolo":true,"termsText":"I certify that all squad members are active university students or researchers and agree to the battleground rules."},"challenges":[{"id":"open-innovation","number":"05","title":"OPEN INNOVATION","category":"MOONSHOT & EXPERIMENTAL","difficulty":"All Levels","shortDescription":"Bring your boldest, uncategorizable idea. From decentralized protocols to neurotech and green computing."}],"timeline":[{"id":"d1-reg","day":"DAY","time":"09:00 AM","title":"Check-In & Hardware Station Setup","description":"Physical badge collection, hacker kit distribution, and developer network onboarding at GCEK Arena.","milestone":false},{"id":"d1-ceremony","day":"DAY","time":"10:00 AM","title":"Opening Keynote & Challenge Briefing","description":"Welcome addresses, problem track reveals, rules of engagement, and sponsor API key distribution.","milestone":true},{"id":"d1-hack-begins","day":"DAY 01","time":"11:00 AM","title":"THE 24-HOUR CLOCK STARTS","description":"Official commencement of hacking. Git repositories initialize and cloud credits unlock.","milestone":true},{"id":"d1-mentor-1","day":"DAY 01","time":"04:00 PM","title":"Mentor Round: Architecture Review","description":"Industry veterans conduct desk reviews to stress-test data schemas and execution scope.","milestone":false},{"id":"d2-submission","day":"DAY 02","time":"11:00 AM","title":"CODE FREEZE & FINAL SUBMISSION","description":"All GitHub repositories, walkthrough videos, and deployed URLs locked into the judging portal.","milestone":true},{"id":"d2-awards","day":"DAY 02","time":"04:00 PM","title":"Grand Finale, Awards & Closing Ceremony","description":"Announcement of ₹1,50,000+ prize winners, track laurels, and closing celebration.","milestone":true}],"sponsors":[{"id":"sp-1","name":"NEO COMPUTE LABS","tier":"Title Partner","category":"High-Performance Cloud Infrastructure & Grants","logoUrl":"https://png.pngtree.com/png-clipart/20190611/original/pngtree-wolf-logo-png-image_2306634.jpg","websiteUrl":"https://cloud.google.com"},{"id":"sp-2","name":"CYBERNETIC VENTURES","tier":"Title Partner","category":"Pre-Seed Hacker Capital & Incubation","logoUrl":"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg","websiteUrl":"https://github.com"},{"id":"sp-3","name":"QUANTUM PROTOCOL","tier":"Platinum","category":"Zero-Knowledge Cryptography & Dev Tooling","logoUrl":"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/solidity/solidity-original.svg","websiteUrl":"https://ethereum.org"},{"id":"sp-4","name":"ROBOTIX FOUNDATION","tier":"Platinum","category":"Embedded Systems & Hardware Labs","logoUrl":"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg","websiteUrl":"https://rust-lang.org"},{"id":"sp-5","name":"DEVNEXUS","tier":"Gold","category":"Developer Tooling & SDKs","logoUrl":"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg","websiteUrl":"https://typescriptlang.org"},{"id":"sp-6","name":"SYNAPSE AI","tier":"Ecosystem","category":"Model API & Grant Partner","logoUrl":"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg","websiteUrl":"https://python.org"}],"eventControl":{"countdownTargetDate":"2026-09-26T02:30:00.000Z","battlegroundsLocked":false,"battlegroundsLockedMessage":"BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE."},"adminSettings":{"passcode":"hackverse2026admin"},"registrations":[]}'::jsonb, now())
+ON CONFLICT (id) 
+DO UPDATE SET 
+    content = EXCLUDED.content,
+    updated_at = now();
+
+-- 7. STORAGE SETUP FOR MEDIA (LOGOS & IMAGES)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('media', 'media', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Storage public read policy
+DROP POLICY IF EXISTS "Public can view media" ON storage.objects;
+CREATE POLICY "Public can view media"
+ON storage.objects FOR SELECT
+TO anon, authenticated
+USING (bucket_id = 'media');
+
+-- Storage public upload policy
+DROP POLICY IF EXISTS "Public can upload media" ON storage.objects;
+CREATE POLICY "Public can upload media"
+ON storage.objects FOR INSERT
+TO anon, authenticated
+WITH CHECK (bucket_id = 'media');
+
+-- Storage public update & delete policy
+DROP POLICY IF EXISTS "Public can modify media" ON storage.objects;
+CREATE POLICY "Public can modify media"
+ON storage.objects FOR UPDATE
+TO anon, authenticated
+USING (bucket_id = 'media');

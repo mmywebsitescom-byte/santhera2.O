@@ -1,0 +1,6 @@
+{
+  "name": "Techxera Hackfest '26",
+  "description": "HackVerse edition by Codebreakers GCEK. Central & Eastern India's premier 24H state tech fest & hackathon with Shadow Arena background.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
