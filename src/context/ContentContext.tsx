@@ -163,7 +163,20 @@ export interface SiteContent {
     websiteUrl?: string;
     [key: string]: unknown;
   }>;
+  loadingScreen?: {
+    enabled?: boolean;
+    logoUrl?: string;
+    showLogo?: boolean;
+    presentsText?: string;
+    titleGothic?: string;
+    titleAccent?: string;
+    tagline?: string;
+    durationMs?: number;
+    allowSkip?: boolean;
+    [key: string]: unknown;
+  };
   adminSettings?: {
+    email?: string;
     passcode?: string;
     [key: string]: unknown;
   };
@@ -453,6 +466,17 @@ export const initialFallbackContent: SiteContent = {
       category: "Model API & Grant Partner"
     }
   ],
+  loadingScreen: {
+    enabled: true,
+    logoUrl: "",
+    showLogo: true,
+    presentsText: "TECHXERA PRESENTS",
+    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
+    titleAccent: "'26",
+    tagline: "BUILD THE FUTURE • ENTER THE ARENA",
+    durationMs: 4600,
+    allowSkip: true
+  },
   adminSettings: {
     email: "techxerahack@gmail.com",
     passcode: "Techxera@gmail.2026"
@@ -503,6 +527,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           timeline: data.timeline || prev.timeline,
           sponsors: data.sponsors || prev.sponsors,
           adminSettings: { ...prev.adminSettings, ...(data.adminSettings || {}) },
+          loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
           teams: data.teams || prev.teams,
           faq: data.faq || prev.faq,
         }));
@@ -535,6 +560,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             timeline: data.timeline || prev.timeline,
             sponsors: data.sponsors || prev.sponsors,
             adminSettings: { ...prev.adminSettings, ...(data.adminSettings || {}) },
+            loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
             teams: data.teams || prev.teams,
             faq: data.faq || prev.faq,
           }));

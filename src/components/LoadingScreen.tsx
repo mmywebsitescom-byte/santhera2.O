@@ -16,6 +16,10 @@ const PHASES = [
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const { content } = useSiteContent();
+  const ls = content?.loadingScreen || {};
+  const isEnabled = ls.enabled !== false;
+  const totalDuration = typeof ls.durationMs === 'number' && ls.durationMs >= 500 ? ls.durationMs : 4600;
+
   const [percent, setPercent] = useState(0);
   const [phase, setPhase] = useState<'loading' | 'fadeout'>('loading');
   const [statusText, setStatusText] = useState(PHASES[0].text);
@@ -33,7 +37,11 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const doneRef = useRef(false);
 
   useEffect(() => {
-    const totalDuration = 4600;
+    if (!isEnabled) {
+      onComplete();
+      return;
+    }
+
     const intervalMs = 20;
     const start = performance.now();
 
@@ -62,7 +70,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     }, intervalMs);
 
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, [onComplete, totalDuration, isEnabled]);
 
   const handleSkip = () => {
     if (doneRef.current) return;
@@ -139,54 +147,62 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
             >
               <span className="block w-6 h-[1px] bg-[#D4AF37]/50" />
               <span className="font-space text-[10px] tracking-[0.5em] text-[#D4AF37]/80 uppercase font-bold">
-                TECHXERA PRESENTS
+                {ls.presentsText || 'TECHXERA PRESENTS'}
               </span>
               <span className="block w-6 h-[1px] bg-[#D4AF37]/50" />
             </motion.div>
 
             {/* Logo icon */}
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.2, type: 'spring', stiffness: 180 }}
-              className="relative mb-6"
-            >
-              <div
-                className="w-20 h-20 flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #0c1017 0%, #141d2b 100%)',
-                  border: '1px solid rgba(212,175,55,0.5)',
-                  clipPath: 'polygon(12% 0%, 88% 0%, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0% 88%, 0% 12%)',
-                  boxShadow: '0 0 40px rgba(212,175,55,0.2), inset 0 0 30px rgba(212,175,55,0.05)',
-                }}
-              >
-                {content?.navbar?.siteLogoUrl ? (
-                  <img
-                    src={String(content.navbar.siteLogoUrl)}
-                    alt="Logo"
-                    className="w-12 h-12 object-contain"
-                  />
-                ) : (
-                  <span
-                    className="font-cinzel font-black text-2xl leading-none"
-                    style={{
-                      background: 'linear-gradient(135deg, #D4AF37, #F5D061, #D4AF37)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    HV
-                  </span>
-                )}
-              </div>
-              {/* Pulsing ring */}
+            {(ls.showLogo !== false) && (
               <motion.div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                style={{ border: '1px solid rgba(212,175,55,0.2)' }}
-                animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              />
-            </motion.div>
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.2, type: 'spring', stiffness: 180 }}
+                className="relative mb-6"
+              >
+                <div
+                  className="w-20 h-20 flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #0c1017 0%, #141d2b 100%)',
+                    border: '1px solid rgba(212,175,55,0.5)',
+                    clipPath: 'polygon(12% 0%, 88% 0%, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0% 88%, 0% 12%)',
+                    boxShadow: '0 0 40px rgba(212,175,55,0.2), inset 0 0 30px rgba(212,175,55,0.05)',
+                  }}
+                >
+                  {(ls.logoUrl && String(ls.logoUrl).trim()) ? (
+                    <img
+                      src={String(ls.logoUrl)}
+                      alt="Hackverse Logo"
+                      className="w-12 h-12 object-contain"
+                    />
+                  ) : (content?.navbar?.siteLogoUrl && !ls.logoUrlDeleted) ? (
+                    <img
+                      src={String(content.navbar.siteLogoUrl)}
+                      alt="Hackverse Logo"
+                      className="w-12 h-12 object-contain"
+                    />
+                  ) : (
+                    <span
+                      className="font-cinzel font-black text-2xl leading-none"
+                      style={{
+                        background: 'linear-gradient(135deg, #D4AF37, #F5D061, #D4AF37)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      HV
+                    </span>
+                  )}
+                </div>
+                {/* Pulsing ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{ border: '1px solid rgba(212,175,55,0.2)' }}
+                  animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </motion.div>
+            )}
 
             {/* Main Gothic Title */}
             <div className="overflow-hidden mb-1">
@@ -202,7 +218,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   filter: 'drop-shadow(0 0 30px rgba(212,175,55,0.3))',
                 }}
               >
-                𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊
+                {ls.titleGothic || content?.hero?.titleGothic || content?.eventInfo?.titleGothic || '𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊'}
               </motion.h1>
             </div>
 
@@ -218,7 +234,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              '26
+              {ls.titleAccent || content?.hero?.titleAccent || content?.eventInfo?.titleAccent || "'26"}
             </motion.div>
 
             {/* Tagline */}
@@ -228,7 +244,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               transition={{ duration: 0.6, delay: 0.7 }}
               className="font-space text-[10px] sm:text-xs tracking-[0.4em] text-[#A1A1A1] uppercase mt-1 font-medium"
             >
-              BUILD THE FUTURE • ENTER THE ARENA
+              {ls.tagline || content?.eventInfo?.tagline || 'BUILD THE FUTURE • ENTER THE ARENA'}
             </motion.p>
 
             {/* Live Status text */}

@@ -279,5 +279,16 @@
     "email": "techxerahack@gmail.com",
     "passcode": "Techxera@gmail.2026"
   },
+  "loadingScreen": {
+    "enabled": true,
+    "logoUrl": "",
+    "showLogo": true,
+    "presentsText": "TECHXERA PRESENTS",
+    "titleGothic": "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
+    "titleAccent": "'26",
+    "tagline": "BUILD THE FUTURE • ENTER THE ARENA",
+    "durationMs": 4600,
+    "allowSkip": true
+  },
   "registrations": []
 }

@@ -17,6 +17,7 @@ interface AdminPanelProps {
 type Section = 
   | "overview" 
   | "eventControl"
+  | "loadingScreen"
   | "registrationConfig"
   | "registrations"
   | "hero" 
@@ -75,6 +76,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [newPasscode, setNewPasscode] = useState("");
   const [passcodeMsg, setPasscodeMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [passcodeLoading, setPasscodeLoading] = useState(false);
+
+  // Loading Screen Logo upload states
+  const [loadingLogoUploading, setLoadingLogoUploading] = useState(false);
+  const [loadingLogoUploadErr, setLoadingLogoUploadErr] = useState("");
 
   const fetchContent = useCallback(async () => {
     // 1. Try Supabase first
@@ -513,6 +518,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const sidebarItems: { key: Section; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview & Health", icon: <Activity className="w-4 h-4" /> },
     { key: "eventControl", label: "Event Control Center", icon: <Clock className="w-4 h-4 text-[#FF4655]" /> },
+    { key: "loadingScreen", label: "Loading Screen & Logo", icon: <Sparkles className="w-4 h-4 text-[#D4AF37]" /> },
     { key: "registrationConfig", label: "Register Form Config", icon: <ClipboardList className="w-4 h-4 text-[#F5D061]" /> },
     { key: "registrations", label: `Warriors Enlisted (${registrations.length})`, icon: <Database className="w-4 h-4 text-[#55FF55]" /> },
     { key: "hero", label: "Hero Banner Content", icon: <Star className="w-4 h-4" /> },
@@ -534,6 +540,56 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const regConfig = editData.registrationForm || {};
   const eventInfo = editData.eventInfo || {};
   const eventControlData = editData.eventControl || { countdownTargetDate: "2026-10-16T09:00:00Z", battlegroundsLocked: false, battlegroundsLockedMessage: "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE." };
+  const loadingScreenData = editData.loadingScreen || {
+    enabled: true,
+    logoUrl: "",
+    showLogo: true,
+    presentsText: "TECHXERA PRESENTS",
+    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
+    titleAccent: "'26",
+    tagline: "BUILD THE FUTURE • ENTER THE ARENA",
+    durationMs: 4600,
+    allowSkip: true,
+  };
+
+  const handleLoadingLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoadingLogoUploading(true);
+    setLoadingLogoUploadErr("");
+    try {
+      const publicUrl = await uploadMediaToSupabase(file, 'loading-logos');
+      if (publicUrl) {
+        setEditData({
+          ...editData,
+          loadingScreen: {
+            ...loadingScreenData,
+            logoUrl: publicUrl,
+            showLogo: true,
+            logoUrlDeleted: false,
+          },
+        });
+      } else {
+        setLoadingLogoUploadErr("Storage upload notice: file could not be uploaded. You can paste an image URL directly below.");
+      }
+    } catch (err: any) {
+      setLoadingLogoUploadErr(err.message || "Failed to upload logo");
+    } finally {
+      setLoadingLogoUploading(false);
+    }
+  };
+
+  const handleDeleteLoadingLogo = () => {
+    setEditData({
+      ...editData,
+      loadingScreen: {
+        ...loadingScreenData,
+        logoUrl: "",
+        logoUrlDeleted: true,
+      },
+    });
+  };
+
   const hero = editData.hero || {};
   const navbar = editData.navbar || {};
   const mission = editData.mission || {};
@@ -951,6 +1007,399 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <Save className="w-3.5 h-3.5" />
                   SAVE BATTLEGROUNDS CONTROL
                 </button>
+              </div>
+
+            </div>
+          )}
+
+          {/* 1c. LOADING SCREEN & INTRO LOGO CONTROL */}
+          {activeSection === "loadingScreen" && (
+            <div className="space-y-6 max-w-4xl">
+              {/* Header card with Save button */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border border-[#D4AF37]/30 bg-[#0c1017] sf-clip-angled-sm">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#F5D061]" />
+                    <h3 className="font-cinzel font-bold text-lg text-white tracking-wide">
+                      Loading Screen & Logo Management
+                    </h3>
+                  </div>
+                  <p className="font-rajdhani text-xs text-neutral-400 mt-1">
+                    Customize the cinematic intro screen, upload or delete the loading logo, edit the gothic title, and control duration.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleSaveSection("loadingScreen", loadingScreenData)}
+                  disabled={saveStatus === "saving"}
+                  className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-widest flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {saveStatus === "saving" ? "SAVING..." : "SAVE LOADING SCREEN"}
+                </button>
+              </div>
+
+              {/* Live Preview of Loading Screen */}
+              <div className="p-6 border border-[#D4AF37]/30 bg-[#040608] sf-clip-angled-sm text-center relative overflow-hidden">
+                <div className="absolute top-2 right-3 font-mono text-[10px] text-neutral-500 uppercase">
+                  [ LIVE PREVIEW ]
+                </div>
+
+                <div className="py-6 flex flex-col items-center justify-center space-y-4">
+                  {/* Badge */}
+                  <div className="flex items-center gap-2">
+                    <span className="block w-5 h-[1px] bg-[#D4AF37]/50" />
+                    <span className="font-mono text-[10px] tracking-[0.4em] text-[#D4AF37] font-bold uppercase">
+                      {loadingScreenData.presentsText || "TECHXERA PRESENTS"}
+                    </span>
+                    <span className="block w-5 h-[1px] bg-[#D4AF37]/50" />
+                  </div>
+
+                  {/* Logo preview */}
+                  {loadingScreenData.showLogo !== false && (
+                    <div
+                      className="w-16 h-16 flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #0c1017 0%, #141d2b 100%)',
+                        border: '1px solid rgba(212,175,55,0.5)',
+                        clipPath: 'polygon(12% 0%, 88% 0%, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0% 88%, 0% 12%)',
+                        boxShadow: '0 0 25px rgba(212,175,55,0.2)',
+                      }}
+                    >
+                      {loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim() ? (
+                        <img
+                          src={String(loadingScreenData.logoUrl)}
+                          alt="Logo Preview"
+                          className="w-10 h-10 object-contain"
+                        />
+                      ) : (
+                        <span className="font-cinzel font-black text-xl text-[#F5D061]">
+                          HV
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Gothic Title */}
+                  <div className="space-y-1">
+                    <div className="sf-gothic-title text-4xl sm:text-5xl text-[#F5D061] leading-none">
+                      {loadingScreenData.titleGothic || "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"}
+                    </div>
+                    <div className="sf-gothic-title text-2xl sm:text-3xl text-[#FF4655] leading-none">
+                      {loadingScreenData.titleAccent || "'26"}
+                    </div>
+                  </div>
+
+                  {/* Tagline */}
+                  <div className="font-mono text-[10px] tracking-[0.3em] text-neutral-400 uppercase">
+                    {loadingScreenData.tagline || "BUILD THE FUTURE • ENTER THE ARENA"}
+                  </div>
+
+                  {/* Mini Progress Bar Simulation */}
+                  <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
+                    <div className="w-3/4 h-full bg-gradient-to-r from-[#DC2626] via-[#D4AF37] to-[#55FF55]" />
+                  </div>
+                  <div className="font-mono text-[9px] text-[#55FF55]">
+                    ARENA SYSTEMS ONLINE... 75%
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Logo Control Card (Change & Delete Logo) ── */}
+              <div className="p-6 border border-[#D4AF37]/30 bg-[#0c1017] sf-clip-angled-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Image className="w-4 h-4 text-[#F5D061]" />
+                    <h4 className="font-cinzel font-bold text-sm text-[#F5D061] uppercase tracking-wider">
+                      Loading Screen Logo Control
+                    </h4>
+                  </div>
+                  <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase border ${
+                    loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim()
+                      ? "border-[#55FF55]/40 text-[#55FF55] bg-[#55FF55]/10"
+                      : "border-[#FFAA00]/40 text-[#FFDF78] bg-[#FFAA00]/10"
+                  }`}>
+                    {loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim()
+                      ? "CUSTOM LOGO ACTIVE"
+                      : "DEFAULT 'HV' EMBLEM"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                  {/* Left: Logo Preview & Delete Button */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border border-white/10 bg-[#141a24]/60">
+                    <div className="w-20 h-20 bg-[#0a0e14] border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
+                      {loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim() ? (
+                        <img
+                          src={String(loadingScreenData.logoUrl)}
+                          alt="Current Logo"
+                          className="w-16 h-16 object-contain"
+                        />
+                      ) : (
+                        <div className="text-center font-mono text-[10px] text-neutral-500">
+                          <span className="font-cinzel text-xl font-bold text-[#F5D061] block">HV</span>
+                          No Logo
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 text-center sm:text-left flex-1">
+                      <p className="font-rajdhani text-xs text-neutral-300 font-bold">
+                        {loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim()
+                          ? "Custom logo image is currently set."
+                          : "No custom image. Falling back to the golden 'HV' animated monogram."}
+                      </p>
+
+                      {/* Action buttons: Change / Delete */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <label className="px-3 py-1.5 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 border border-[#D4AF37]/60 text-white font-mono text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
+                          <Upload className="w-3.5 h-3.5 text-[#F5D061]" />
+                          <span>{loadingLogoUploading ? "UPLOADING..." : "UPLOAD NEW LOGO"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLoadingLogoUpload}
+                            disabled={loadingLogoUploading}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {loadingScreenData.logoUrl && String(loadingScreenData.logoUrl).trim() && (
+                          <button
+                            type="button"
+                            onClick={handleDeleteLoadingLogo}
+                            className="px-3 py-1.5 bg-[#FF4655]/20 hover:bg-[#FF4655]/30 border border-[#FF4655]/60 text-[#FF4655] hover:text-white font-mono text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>DELETE LOGO</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Direct Image URL & Show/Hide Toggle */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
+                        Or Paste Logo Image URL Directly
+                      </label>
+                      <input
+                        type="url"
+                        value={loadingScreenData.logoUrl || ""}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            loadingScreen: {
+                              ...loadingScreenData,
+                              logoUrl: e.target.value,
+                              logoUrlDeleted: !e.target.value.trim(),
+                            },
+                          })
+                        }
+                        placeholder="https://... (PNG, SVG, JPG, WebP)"
+                        className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                      />
+                    </div>
+
+                    <label className="flex items-center gap-2.5 p-2.5 border border-white/5 bg-[#141a24]/40 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={loadingScreenData.showLogo !== false}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            loadingScreen: {
+                              ...loadingScreenData,
+                              showLogo: e.target.checked,
+                            },
+                          })
+                        }
+                        className="w-4 h-4 accent-[#D4AF37] cursor-pointer"
+                      />
+                      <span className="font-rajdhani text-xs text-neutral-300 font-bold">
+                        Display Logo Box on Loading Screen
+                      </span>
+                    </label>
+
+                    {loadingLogoUploadErr && (
+                      <p className="font-mono text-[11px] text-[#FF4655]">
+                        {loadingLogoUploadErr}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Text & Title Settings ── */}
+              <div className="p-6 border border-[#D4AF37]/30 bg-[#0c1017] sf-clip-angled-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-[#D4AF37]/20 pb-3">
+                  <Edit3 className="w-4 h-4 text-[#F5D061]" />
+                  <h4 className="font-cinzel font-bold text-sm text-[#F5D061] uppercase tracking-wider">
+                    Title & Subtitle Branding
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
+                      Organization Badge (Top Line)
+                    </label>
+                    <input
+                      type="text"
+                      value={loadingScreenData.presentsText || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          loadingScreen: { ...loadingScreenData, presentsText: e.target.value },
+                        })
+                      }
+                      placeholder="TECHXERA PRESENTS"
+                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
+                      Gothic Main Title
+                    </label>
+                    <input
+                      type="text"
+                      value={loadingScreenData.titleGothic || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          loadingScreen: { ...loadingScreenData, titleGothic: e.target.value },
+                        })
+                      }
+                      placeholder="𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"
+                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
+                      Title Accent / Year
+                    </label>
+                    <input
+                      type="text"
+                      value={loadingScreenData.titleAccent || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          loadingScreen: { ...loadingScreenData, titleAccent: e.target.value },
+                        })
+                      }
+                      placeholder="'26"
+                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
+                      Tagline / Mission Line
+                    </label>
+                    <input
+                      type="text"
+                      value={loadingScreenData.tagline || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          loadingScreen: { ...loadingScreenData, tagline: e.target.value },
+                        })
+                      }
+                      placeholder="BUILD THE FUTURE • ENTER THE ARENA"
+                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Timing & Behavior Settings ── */}
+              <div className="p-6 border border-[#D4AF37]/30 bg-[#0c1017] sf-clip-angled-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-[#D4AF37]/20 pb-3">
+                  <Clock className="w-4 h-4 text-[#F5D061]" />
+                  <h4 className="font-cinzel font-bold text-sm text-[#F5D061] uppercase tracking-wider">
+                    Duration & Behavior
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider">
+                        Intro Duration
+                      </label>
+                      <span className="font-mono text-xs text-[#55FF55]">
+                        {((loadingScreenData.durationMs || 4600) / 1000).toFixed(1)}s ({loadingScreenData.durationMs || 4600}ms)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1000}
+                      max={8000}
+                      step={200}
+                      value={loadingScreenData.durationMs || 4600}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          loadingScreen: {
+                            ...loadingScreenData,
+                            durationMs: Number(e.target.value),
+                          },
+                        })
+                      }
+                      className="w-full accent-[#D4AF37] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2.5 p-2.5 border border-white/5 bg-[#141a24]/40 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={loadingScreenData.enabled !== false}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            loadingScreen: { ...loadingScreenData, enabled: e.target.checked },
+                          })
+                        }
+                        className="w-4 h-4 accent-[#D4AF37] cursor-pointer"
+                      />
+                      <span className="font-rajdhani text-xs text-neutral-300 font-bold">
+                        Enable Loading Screen on Page Open
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 p-2.5 border border-white/5 bg-[#141a24]/40 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={loadingScreenData.allowSkip !== false}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            loadingScreen: { ...loadingScreenData, allowSkip: e.target.checked },
+                          })
+                        }
+                        className="w-4 h-4 accent-[#D4AF37] cursor-pointer"
+                      />
+                      <span className="font-rajdhani text-xs text-neutral-300 font-bold">
+                        Show 'Skip Intro' Button
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => handleSaveSection("loadingScreen", loadingScreenData)}
+                    disabled={saveStatus === "saving"}
+                    className="w-full py-3 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    {saveStatus === "saving" ? "SAVING..." : "SAVE LOADING SCREEN CONFIGURATION"}
+                  </button>
+                </div>
               </div>
 
             </div>
