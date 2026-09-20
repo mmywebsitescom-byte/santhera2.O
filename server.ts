@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +13,21 @@ const PORT = 4000;
 const CONTENT_FILE = path.join(__dirname, 'content.json');
 const DEFAULT_ADMIN_PASSWORD = 'Techxera@gmail.2026';
 const DEFAULT_ADMIN_EMAIL = 'techxerahack@gmail.com';
+
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  'postgresql://postgres.lloiyxagwcbsunhsbvip:Raghab%4020062026@aws-0-ap-south-1.pooler.supabase.com:6543/postgres';
+
+export const dbPool = new pg.Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 8,
+  idleTimeoutMillis: 30000,
+});
+
+dbPool.on('error', (err) => {
+  console.warn('PostgreSQL pool background event:', err.message);
+});
 
 function getAdminPassword(): string {
   const content = readContent();
@@ -84,6 +101,32 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 app.get('/api/content', (_req, res) => {
   const content = readContent();
   res.json(content);
+});
+
+// Direct PostgreSQL health check endpoint
+app.get('/api/db-status', async (_req, res) => {
+  try {
+    const result = await dbPool.query(`
+      SELECT 
+        current_database() as database,
+        current_user as user,
+        now() as server_time,
+        version() as version;
+    `);
+    const tables = await dbPool.query(`
+      SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
+    `);
+    res.json({
+      connected: true,
+      database: result.rows[0].database,
+      user: result.rows[0].user,
+      serverTime: result.rows[0].server_time,
+      version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1],
+      tables: tables.rows.map((r: any) => r.table_name),
+    });
+  } catch (err: any) {
+    res.status(500).json({ connected: false, error: err.message });
+  }
 });
 
 app.post('/api/admin/login', (req, res) => {
