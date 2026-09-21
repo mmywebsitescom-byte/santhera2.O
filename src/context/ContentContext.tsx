@@ -22,6 +22,20 @@ export interface SiteContent {
     countdownTargetDate?: string;
     battlegroundsLocked?: boolean;
     battlegroundsLockedMessage?: string;
+    sponsorsLocked?: boolean;
+    sponsorsLockedMessage?: string;
+    [key: string]: unknown;
+  };
+  battlegrounds?: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    tracksCount?: string;
+    prizePool?: string;
+    duration?: string;
+    teamSize?: string;
+    bottomCtaText?: string;
+    bottomCtaButton?: string;
     [key: string]: unknown;
   };
   hero: {
@@ -188,8 +202,8 @@ export const initialFallbackContent: SiteContent = {
   eventInfo: {
     name: "TECHXERA HACKFEST '26",
     shortName: "HACKFEST '26",
-    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    titleAccent: "'𝟚𝟞",
+    titleGothic: "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    titleAccent: "2026",
     tagline: "BUILD. BREAK. INNOVATE.",
     dates: "OCTOBER 16 – 18, 2026",
     venue: "Government College of Engineering Kalahandi",
@@ -202,11 +216,24 @@ export const initialFallbackContent: SiteContent = {
   eventControl: {
     countdownTargetDate: "2026-10-16T09:00:00Z",
     battlegroundsLocked: false,
-    battlegroundsLockedMessage: "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE."
+    battlegroundsLockedMessage: "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE.",
+    sponsorsLocked: false,
+    sponsorsLockedMessage: "SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH."
+  },
+  battlegrounds: {
+    title: "Battlegrounds",
+    subtitle: "HACKVERSE '26",
+    description: "Five elite combat domains. Choose your battleground wisely — each track tests a different dimension of engineering mastery. Only the most prepared squads will claim the bounty.",
+    tracksCount: "5",
+    prizePool: "1,50,000+",
+    duration: "24 HOURS",
+    teamSize: "2-4 WARRIORS",
+    bottomCtaText: "CANT DECIDE? REGISTER AND PICK YOUR TRACK ON ARRIVAL.",
+    bottomCtaButton: "JOIN THE BATTLE - ITS FREE"
   },
   hero: {
-    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    titleAccent: "'𝟚𝟞",
+    titleGothic: "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    titleAccent: "2026",
     subheadline: "WHERE WARRIORS CODE // 24 HOURS OF CODE, HARDWARE & INTELLIGENCE",
     description: "Assemble your squad of 2 to 4 engineers at the Government College of Engineering Kalahandi bamboo arena. Non-stop battleground programming, classified quests, and ₹1,50,000+ bounty pool.",
     seatsClaimed: 184,
@@ -471,8 +498,8 @@ export const initialFallbackContent: SiteContent = {
     logoUrl: "",
     showLogo: true,
     presentsText: "TECHXERA PRESENTS",
-    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    titleAccent: "'26",
+    titleGothic: "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    titleAccent: "2026",
     tagline: "BUILD THE FUTURE • ENTER THE ARENA",
     durationMs: 4600,
     allowSkip: true
@@ -523,13 +550,14 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           prizes: { ...prev.prizes, ...(data.prizes || {}) },
           footer: { ...prev.footer, ...(data.footer || {}) },
           registrationForm: { ...prev.registrationForm, ...(data.registrationForm || {}) },
-          challenges: data.challenges || prev.challenges,
-          timeline: data.timeline || prev.timeline,
-          sponsors: data.sponsors || prev.sponsors,
+          battlegrounds: { ...prev.battlegrounds, ...(data.battlegrounds || {}) },
+          challenges: Array.isArray(data.challenges) ? data.challenges : prev.challenges,
+          timeline: Array.isArray(data.timeline) ? data.timeline : prev.timeline,
+          sponsors: Array.isArray(data.sponsors) ? data.sponsors : prev.sponsors,
           adminSettings: { ...prev.adminSettings, ...(data.adminSettings || {}) },
           loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
-          teams: data.teams || prev.teams,
-          faq: data.faq || prev.faq,
+          teams: Array.isArray(data.teams) ? data.teams : prev.teams,
+          faq: Array.isArray(data.faq) ? data.faq : prev.faq,
         }));
         setLoading(false);
         return;
@@ -556,13 +584,14 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             prizes: { ...prev.prizes, ...(data.prizes || {}) },
             footer: { ...prev.footer, ...(data.footer || {}) },
             registrationForm: { ...prev.registrationForm, ...(data.registrationForm || {}) },
-            challenges: data.challenges || prev.challenges,
-            timeline: data.timeline || prev.timeline,
-            sponsors: data.sponsors || prev.sponsors,
+            battlegrounds: { ...prev.battlegrounds, ...(data.battlegrounds || {}) },
+            challenges: Array.isArray(data.challenges) ? data.challenges : prev.challenges,
+            timeline: Array.isArray(data.timeline) ? data.timeline : prev.timeline,
+            sponsors: Array.isArray(data.sponsors) ? data.sponsors : prev.sponsors,
             adminSettings: { ...prev.adminSettings, ...(data.adminSettings || {}) },
             loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
-            teams: data.teams || prev.teams,
-            faq: data.faq || prev.faq,
+            teams: Array.isArray(data.teams) ? data.teams : prev.teams,
+            faq: Array.isArray(data.faq) ? data.faq : prev.faq,
           }));
         }
       }
@@ -575,6 +604,54 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     refreshContent();
+
+    // Supabase Realtime Channel: Listen for immediate database updates across all clients
+    let channel: any = null;
+    try {
+      channel = supabase
+        .channel('public:site_content_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_content' },
+          (payload) => {
+            if (payload?.new && (payload.new as any)?.content) {
+              const data = (payload.new as any).content;
+              setContent((prev) => ({
+                ...prev,
+                ...data,
+                eventInfo: { ...prev.eventInfo, ...(data.eventInfo || {}) },
+                eventControl: { ...prev.eventControl, ...(data.eventControl || {}) },
+                hero: { ...prev.hero, ...(data.hero || {}) },
+                navbar: { ...prev.navbar, ...(data.navbar || {}) },
+                mission: { ...prev.mission, ...(data.mission || {}) },
+                stats: { ...prev.stats, ...(data.stats || {}) },
+                prizes: { ...prev.prizes, ...(data.prizes || {}) },
+                footer: { ...prev.footer, ...(data.footer || {}) },
+                registrationForm: { ...prev.registrationForm, ...(data.registrationForm || {}) },
+                battlegrounds: { ...prev.battlegrounds, ...(data.battlegrounds || {}) },
+                challenges: Array.isArray(data.challenges) ? data.challenges : prev.challenges,
+                timeline: Array.isArray(data.timeline) ? data.timeline : prev.timeline,
+                sponsors: Array.isArray(data.sponsors) ? data.sponsors : prev.sponsors,
+                adminSettings: { ...prev.adminSettings, ...(data.adminSettings || {}) },
+                loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
+                teams: Array.isArray(data.teams) ? data.teams : prev.teams,
+                faq: Array.isArray(data.faq) ? data.faq : prev.faq,
+              }));
+            } else {
+              refreshContent();
+            }
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn("Realtime subscription notice:", e);
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [refreshContent]);
 
   return (

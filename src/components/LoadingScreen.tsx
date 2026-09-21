@@ -137,7 +137,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           <div className="absolute bottom-8 right-8 w-12 h-12 border-b-2 border-r-2 border-[#D4AF37]/30 pointer-events-none" />
 
           {/* Central content */}
-          <div className="relative z-10 flex flex-col items-center text-center px-6">
+          <div className="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-full">
             {/* Org badge */}
             <motion.div
               initial={{ opacity: 0, y: -12 }}
@@ -204,13 +204,13 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               </motion.div>
             )}
 
-            {/* Main Gothic Title */}
-            <div className="overflow-hidden mb-1">
+            {/* Main Monospace Title */}
+            <div className="mb-1 w-full flex justify-center">
               <motion.h1
                 initial={{ y: 70, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.85, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="sf-gothic-title text-6xl sm:text-8xl md:text-9xl leading-none"
+                className="sf-script-title sf-gothic-title text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-none whitespace-nowrap"
                 style={{
                   background: 'linear-gradient(135deg, #C8A826 0%, #F5D061 40%, #D4AF37 70%, #9A7A1A 100%)',
                   WebkitBackgroundClip: 'text',
@@ -218,7 +218,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   filter: 'drop-shadow(0 0 30px rgba(212,175,55,0.3))',
                 }}
               >
-                {ls.titleGothic || content?.hero?.titleGothic || content?.eventInfo?.titleGothic || '𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊'}
+                {ls.titleGothic || content?.hero?.titleGothic || content?.eventInfo?.titleGothic || '𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0'}
               </motion.h1>
             </div>
 
@@ -227,14 +227,14 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.55 }}
-              className="sf-gothic-title text-3xl sm:text-5xl leading-none mb-2"
+              className="sf-script-title sf-gothic-title text-3xl sm:text-5xl leading-none mb-2"
               style={{
                 background: 'linear-gradient(135deg, #DC2626, #FF4655, #DC2626)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              {ls.titleAccent || content?.hero?.titleAccent || content?.eventInfo?.titleAccent || "'26"}
+              {ls.titleAccent || content?.hero?.titleAccent || content?.eventInfo?.titleAccent || "2026"}
             </motion.div>
 
             {/* Tagline */}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Shield, X, ExternalLink, Gift, Sparkles } from 'lucide-react';
+import { Shield, X, ExternalLink, Gift, Sparkles, Lock } from 'lucide-react';
 import { SPONSORS } from '../data/hackfestData';
 import { useSiteContent } from '../context/ContentContext';
 
@@ -10,6 +10,9 @@ export default function Sponsors() {
   const [partnerEmail, setPartnerEmail] = useState('');
   const [partnerOrg, setPartnerOrg] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
+
+  const isLocked = content?.eventControl?.sponsorsLocked === true;
+  const lockedMsg = content?.eventControl?.sponsorsLockedMessage || "SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH.";
 
   const rawSponsors = (content.sponsors && content.sponsors.length > 0)
     ? content.sponsors
@@ -75,8 +78,37 @@ export default function Sponsors() {
           </button>
         </div>
 
-        {/* Uniform Partners Grid — Exactly matching the Special Bounties retro card style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLocked ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-8 sm:p-14 border-2 border-[#FF4655]/40 bg-[#0c1017] sf-clip-angled-sm text-center flex flex-col items-center justify-center gap-5 shadow-[0_15px_40px_rgba(0,0,0,0.8)]"
+          >
+            <div className="w-16 h-16 rounded-full bg-[#FF4655]/15 border-2 border-[#FF4655]/60 flex items-center justify-center shadow-[0_0_30px_rgba(255,70,85,0.3)]">
+              <Lock className="w-8 h-8 text-[#FF4655]" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-mono text-xs font-bold uppercase tracking-[0.3em] text-[#FF4655]">
+                CLASSIFICATION: RESTRICTED // SPONSOR ROSTER CLASSIFIED
+              </p>
+              <h3 className="font-mono font-black text-2xl sm:text-3xl text-white uppercase">
+                ALLIANCES LOCKED BY COMMAND
+              </h3>
+            </div>
+            <p className="font-rajdhani text-neutral-300 text-sm sm:text-base max-w-xl leading-relaxed">
+              {lockedMsg}
+            </p>
+            <button
+              onClick={() => setPartnerModalOpen(true)}
+              className="mt-2 px-6 py-3 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-widest uppercase cursor-pointer flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>REQUEST SPONSORSHIP DOSSIER</span>
+            </button>
+          </motion.div>
+        ) : (
+          /* Uniform Partners Grid — Exactly matching the Special Bounties retro card style */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allSponsors.map((sponsor) => (
             <motion.div
               key={sponsor.id}
@@ -171,6 +203,7 @@ export default function Sponsors() {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Partner Inquiry Modal */}

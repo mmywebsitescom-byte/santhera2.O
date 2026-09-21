@@ -7,6 +7,7 @@
     --font-oxanium: 'Oxanium', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
     --font-outfit: 'Outfit', sans-serif;
+    --font-script: 'Great Vibes', 'Alex Brush', 'Allura', cursive;
   }
 
   body {
@@ -39,6 +40,10 @@
 
 .font-outfit {
   font-family: 'Outfit', sans-serif;
+}
+
+.font-script {
+  font-family: 'Great Vibes', 'Alex Brush', 'Allura', cursive;
 }
 
 /* ==========================================================================
@@ -344,11 +349,14 @@
   font-family: 'MedievalSharp', 'Cinzel', serif;
 }
 
-/* Gothic title — used for loading screen & hero headline */
+/* Math Monospace title — matching 𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0 style — used for hero & loading */
+.sf-script-title,
 .sf-gothic-title {
-  font-family: 'UnifrakturMaguntia', 'MedievalSharp', serif;
-  letter-spacing: 0.04em;
-  line-height: 1;
+  font-family: 'IBM Plex Mono', 'Oxanium', 'Courier New', monospace;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
   filter: drop-shadow(0 4px 20px rgba(0,0,0,0.95));
 }
 

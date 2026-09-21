@@ -40,23 +40,23 @@ export default function Hero({ onOpenBattlegrounds }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen w-full flex flex-col justify-between items-center px-4 sm:px-6 md:px-12 pt-32 sm:pt-36 pb-12 overflow-hidden bg-transparent select-none"
+      className="relative min-h-screen w-full flex flex-col justify-between items-center px-4 sm:px-6 md:px-12 pt-32 sm:pt-36 pb-12 overflow-visible bg-transparent select-none"
     >
       {/* Ambient glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[620px] h-[160px] sm:h-[240px] bg-[#D4AF37]/15 rounded-full blur-3xl pointer-events-none z-0" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] sm:w-[500px] h-[140px] sm:h-[200px] bg-red-600/10 rounded-full blur-3xl pointer-events-none z-0" />
 
-      <div className="relative z-20 max-w-5xl mx-auto text-center flex flex-col items-center mt-2 sm:mt-4">
+      <div className="relative z-20 w-full max-w-7xl mx-auto text-center flex flex-col items-center mt-2 sm:mt-4">
         {/* Title */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="relative max-w-4xl"
+          className="relative w-full max-w-full px-2"
         >
-          <h1 className="sf-gothic-title text-5xl sm:text-7xl md:text-8xl lg:text-9xl drop-shadow-[0_10px_25px_rgba(0,0,0,0.95)] sf-text-silver">
-            {hero.titleGothic || eventInfo.titleGothic || "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"}{' '}
-            <span className="sf-text-gold">{hero.titleAccent || eventInfo.titleAccent || "'𝟚𝟞"}</span>
+          <h1 className="sf-script-title sf-gothic-title text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[6rem] 2xl:text-9xl drop-shadow-[0_10px_25px_rgba(0,0,0,0.95)] sf-text-silver whitespace-nowrap">
+            {hero.titleGothic || eventInfo.titleGothic || "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0"}{' '}
+            <span className="sf-text-gold">{hero.titleAccent || eventInfo.titleAccent || "2026"}</span>
           </h1>
         </motion.div>
 

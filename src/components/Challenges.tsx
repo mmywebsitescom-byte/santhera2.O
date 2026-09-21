@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Terminal, Swords, ChevronRight, CheckSquare, Sparkles } from 'lucide-react';
+import { Terminal, Swords, ChevronRight, CheckSquare, Sparkles, Lock } from 'lucide-react';
 import { CHALLENGES } from '../data/hackfestData';
 import { Challenge } from '../types';
 import ChallengeModal from './ChallengeModal';
@@ -16,6 +17,9 @@ export default function Challenges({ onSelectChallengeForRegister }: ChallengesP
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const sectionRef = useRef<HTMLElement>(null);
 
+  const isLocked = content?.eventControl?.battlegroundsLocked === true;
+  const lockedMsg = content?.eventControl?.battlegroundsLockedMessage || 'BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE.';
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'end start'],
@@ -23,32 +27,45 @@ export default function Challenges({ onSelectChallengeForRegister }: ChallengesP
   const bgY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
   const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.12, 1.05, 1.12]);
 
-  const allChallenges: Challenge[] = (content.challenges && content.challenges.length > 0)
+  const parseArray = (val: unknown, fallback: string[] = []): string[] => {
+    if (Array.isArray(val) && val.length > 0) return val.map(String).filter(Boolean);
+    if (typeof val === 'string' && val.trim()) {
+      return val.includes('\n')
+        ? val.split('\n').map((s) => s.trim().replace(/^[-*•\d.]+\s*/, '')).filter(Boolean)
+        : val.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    return fallback;
+  };
+
+  const allChallenges: Challenge[] = (content.challenges && Array.isArray(content.challenges) && content.challenges.length > 0)
     ? content.challenges.map((c, i) => {
-        const fallbackMatch = CHALLENGES.find((fc) => fc.id === c.id);
+        const fallbackMatch = CHALLENGES.find((fc) => fc.id === c.id || fc.title.toLowerCase() === c.title.toLowerCase());
         return {
           id: c.id || `c-${i}`,
           number: c.number || String(i + 1).padStart(2, '0'),
           title: c.title,
-          category: c.category,
+          category: c.category || fallbackMatch?.category || 'INTELLIGENCE SYSTEMS',
           difficulty: (c.difficulty as any) || fallbackMatch?.difficulty || 'All Levels',
-          shortDescription: c.shortDescription || fallbackMatch?.shortDescription || '',
-          skills: (c.skills as string[]) || fallbackMatch?.skills || ['Full-Stack', 'APIs', 'Architecture'],
+          shortDescription: c.shortDescription ?? fallbackMatch?.shortDescription ?? '',
+          skills: parseArray(c.skills, fallbackMatch?.skills || ['Full-Stack', 'APIs', 'Architecture']),
           image: (c.image as string) || fallbackMatch?.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
-          problemStatement: c.problemStatement || fallbackMatch?.problemStatement || c.shortDescription || '',
-          requirements: (c.requirements as string[]) || fallbackMatch?.requirements || ['Working demo prototype', 'Git commit history'],
-          recommendedTech: (c.recommendedTech as string[]) || fallbackMatch?.recommendedTech || ['TypeScript', 'Python', 'Modern APIs'],
-          judgingCriteria: (c.judgingCriteria as string[]) || fallbackMatch?.judgingCriteria || ['Innovation (35%)', 'Technical Execution (35%)', 'Design (30%)'],
+          problemStatement: (c.problemStatement !== undefined && c.problemStatement !== '') ? c.problemStatement : (fallbackMatch?.problemStatement || c.shortDescription || ''),
+          requirements: parseArray(c.requirements, fallbackMatch?.requirements || ['Working demo prototype', 'Git commit history']),
+          recommendedTech: parseArray(c.recommendedTech, fallbackMatch?.recommendedTech || ['TypeScript', 'Python', 'Modern APIs']),
+          judgingCriteria: parseArray(c.judgingCriteria, fallbackMatch?.judgingCriteria || ['Innovation (35%)', 'Technical Execution (35%)', 'Design (30%)']),
           expectedOutput: (c.expectedOutput as string) || fallbackMatch?.expectedOutput || 'Deployed prototype and repository.'
         };
       })
     : CHALLENGES;
 
-  const categories = ['ALL', 'ARTIFICIAL INTELLIGENCE', 'CYBERSECURITY', 'AUTONOMOUS ROBOTICS', 'WEB3 / CLOUD', 'CLEANTECH'];
+  const categories = [
+    'ALL',
+    ...Array.from(new Set(allChallenges.map((c) => c.category?.trim().toUpperCase()).filter(Boolean)))
+  ];
 
   const filteredChallenges = selectedCategory === 'ALL'
     ? allChallenges
-    : allChallenges.filter(c => c.category.toUpperCase().includes(selectedCategory) || selectedCategory.includes(c.category.toUpperCase()));
+    : allChallenges.filter(c => c.category?.trim().toUpperCase() === selectedCategory);
 
   return (
     <section
@@ -84,6 +101,32 @@ export default function Challenges({ onSelectChallengeForRegister }: ChallengesP
             Browse classified state hackathon problem statements. Select your quest, inspect the technical blueprints, and build your solution.
           </p>
         </div>
+
+        {/* Restricted Classification Banner when locked */}
+        {isLocked && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-6 border-2 border-[#FF4655]/50 bg-[#0c1017] sf-clip-angled-sm flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_10px_30px_rgba(255,70,85,0.15)]"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-full bg-[#FF4655]/20 border border-[#FF4655] flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(255,70,85,0.3)]">
+                <Lock className="w-6 h-6 text-[#FF4655]" />
+              </div>
+              <div>
+                <p className="font-mono text-xs font-bold text-[#FF4655] uppercase tracking-widest">
+                  CLASSIFICATION: RESTRICTED // BATTLEGROUNDS LOCKED
+                </p>
+                <p className="font-mono text-xs text-neutral-200 mt-1">
+                  {lockedMsg}
+                </p>
+              </div>
+            </div>
+            <span className="px-3.5 py-1.5 bg-[#FF4655]/20 border border-[#FF4655] font-mono text-[10px] text-[#FF4655] font-black uppercase tracking-wider shrink-0">
+              LOCKED BY COMMAND
+            </span>
+          </motion.div>
+        )}
 
         {/* Category Filter Pills (HackVerse Neo Style) */}
         <div className="flex flex-wrap gap-2 sm:gap-2.5 mb-10 select-none">
@@ -183,8 +226,8 @@ export default function Challenges({ onSelectChallengeForRegister }: ChallengesP
         </div>
       </div>
 
-      {/* Challenge Specs Modal */}
-      {activeModalChallenge && (
+      {/* Challenge Specs Modal — rendered via Portal at document.body to escape isolation stacking context */}
+      {activeModalChallenge && createPortal(
         <ChallengeModal
           challenge={activeModalChallenge}
           isOpen={!!activeModalChallenge}
@@ -193,7 +236,8 @@ export default function Challenges({ onSelectChallengeForRegister }: ChallengesP
             setActiveModalChallenge(null);
             onSelectChallengeForRegister(challenge);
           }}
-        />
+        />,
+        document.body
       )}
     </section>
   );

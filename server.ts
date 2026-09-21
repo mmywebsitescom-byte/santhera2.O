@@ -271,16 +271,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🔑 Admin password: ${getAdminPassword()}\n`);
 });
 
-// Port 3000 convenience redirect -> port 80
-try {
-  const redirectApp = express();
-  redirectApp.use((req, res) => {
-    res.redirect(`http://${req.hostname}${req.url}`);
-  });
-  redirectApp.listen(3000, '0.0.0.0', () => {
-    console.log('🔄 Port 3000 redirect service active -> port 80\n');
-  });
-} catch (err) {
-  console.log('Port 3000 redirect service skipped:', err);
-}
+// Port 4000 API server is active
+
 

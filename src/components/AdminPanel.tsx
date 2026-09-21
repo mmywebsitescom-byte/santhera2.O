@@ -1,14 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Lock, Shield, Settings, Users, Award, HelpCircle, Calendar,
   Edit3, Save, Plus, Trash2, RefreshCw, LogOut, ChevronRight,
   Database, Globe, Star, FileText, CheckCircle2, Code2, AlertCircle,
   Search, Download, ExternalLink, Activity, ClipboardList, Key,
-  Clock, Layers, Sparkles, Navigation, CheckSquare, Upload, Image, Swords
+  Clock, Layers, Sparkles, Navigation, CheckSquare, Upload, Image, Swords, Eye, Terminal
 } from "lucide-react";
 import { useSiteContent } from "../context/ContentContext";
 import { supabase, uploadMediaToSupabase } from "../lib/supabase";
+import { toBoldScript } from "../lib/fontUtils";
+import ChallengeModal from "./ChallengeModal";
+import { Challenge } from "../types";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -80,6 +84,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Loading Screen Logo upload states
   const [loadingLogoUploading, setLoadingLogoUploading] = useState(false);
   const [loadingLogoUploadErr, setLoadingLogoUploadErr] = useState("");
+
+  // Live Dossier Preview state
+  const [previewModalChallenge, setPreviewModalChallenge] = useState<Challenge | null>(null);
 
   const fetchContent = useCallback(async () => {
     // 1. Try Supabase first
@@ -163,6 +170,29 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     if (token) {
       fetchContent();
       fetchRegistrations();
+
+      // Listen for incoming registrations in real-time
+      let regChannel: any = null;
+      try {
+        regChannel = supabase
+          .channel('public:registrations_live')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'registrations' },
+            () => {
+              fetchRegistrations();
+            }
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn("Realtime registration subscription notice:", e);
+      }
+
+      return () => {
+        if (regChannel) {
+          supabase.removeChannel(regChannel);
+        }
+      };
     }
   }, [token, fetchContent, fetchRegistrations]);
 
@@ -243,6 +273,50 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     } catch {
       setSaveStatus("error");
     }
+  };
+
+  const handleSaveChallenges = async (challengesToSave?: any[]) => {
+    const list = challengesToSave || (Array.isArray(editData.challenges) ? editData.challenges : []);
+    const cleaned = list.map((ch: any, i: number) => {
+      const parseList = (val: any): string[] => {
+        if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
+        if (typeof val === "string") {
+          return val
+            .split("\n")
+            .map((s) => s.trim().replace(/^[-*•\d.]+\s*/, ""))
+            .filter(Boolean);
+        }
+        return [];
+      };
+
+      const parseCsv = (val: any): string[] => {
+        if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
+        if (typeof val === "string") {
+          return val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+        return [];
+      };
+
+      return {
+        id: ch.id || `track-${i + 1}`,
+        number: ch.number || String(i + 1).padStart(2, "0"),
+        title: ch.title || `TRACK ${i + 1}`,
+        category: ch.category || "INTELLIGENCE SYSTEMS",
+        difficulty: ch.difficulty || "All Levels",
+        shortDescription: ch.shortDescription || "",
+        problemStatement: ch.problemStatement || "",
+        requirements: parseList(ch.requirements),
+        judgingCriteria: parseList(ch.judgingCriteria),
+        skills: parseCsv(ch.skills),
+        image: ch.image || "",
+      };
+    });
+
+    setEditData((prev) => ({ ...prev, challenges: cleaned }));
+    await handleSaveSection("challenges", cleaned);
   };
 
   const handleSaveRawJson = async () => {
@@ -538,15 +612,31 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   ];
 
   const regConfig = editData.registrationForm || {};
-  const eventInfo = editData.eventInfo || {};
-  const eventControlData = editData.eventControl || { countdownTargetDate: "2026-10-16T09:00:00Z", battlegroundsLocked: false, battlegroundsLockedMessage: "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE." };
+  const eventControlData = editData.eventControl || {
+    countdownTargetDate: "2026-10-16T09:00:00Z",
+    battlegroundsLocked: false,
+    battlegroundsLockedMessage: "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE.",
+    sponsorsLocked: false,
+    sponsorsLockedMessage: "SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH."
+  };
+  const battlegroundsData = editData.battlegrounds || {
+    title: "Battlegrounds",
+    subtitle: "HACKVERSE '26",
+    description: "Five elite combat domains. Choose your battleground wisely — each track tests a different dimension of engineering mastery. Only the most prepared squads will claim the bounty.",
+    tracksCount: "5",
+    prizePool: "1,50,000+",
+    duration: "24 HOURS",
+    teamSize: "2-4 WARRIORS",
+    bottomCtaText: "CANT DECIDE? REGISTER AND PICK YOUR TRACK ON ARRIVAL.",
+    bottomCtaButton: "JOIN THE BATTLE - ITS FREE"
+  };
   const loadingScreenData = editData.loadingScreen || {
     enabled: true,
     logoUrl: "",
     showLogo: true,
     presentsText: "TECHXERA PRESENTS",
-    titleGothic: "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    titleAccent: "'26",
+    titleGothic: "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    titleAccent: "2026",
     tagline: "BUILD THE FUTURE • ENTER THE ARENA",
     durationMs: 4600,
     allowSkip: true,
@@ -591,6 +681,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   };
 
   const hero = editData.hero || {};
+  const eventInfo = editData.eventInfo || {};
   const navbar = editData.navbar || {};
   const mission = editData.mission || {};
   const stats = editData.stats || {};
@@ -1009,6 +1100,85 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </button>
               </div>
 
+              {/* ── Sponsors Lock/Unlock ── */}
+              <div className="p-6 border border-[#FF4655]/30 bg-[#0c1017] sf-clip-angled-sm space-y-5">
+                <div className="flex items-center gap-2 border-b border-[#FF4655]/20 pb-3">
+                  <Shield className="w-4 h-4 text-[#FF4655]" />
+                  <h4 className="font-cinzel font-bold text-sm text-[#FF4655] uppercase tracking-wider">
+                    Sponsors & Allies Access Control
+                  </h4>
+                </div>
+                <p className="font-rajdhani text-xs text-neutral-400">
+                  When <strong className="text-white">LOCKED</strong>, the Sponsors section on the site displays a restricted classified card saying partnerships are under seal.
+                </p>
+
+                {/* Toggle */}
+                <div className={`flex items-center justify-between p-4 border sf-clip-angled-sm ${eventControlData.sponsorsLocked ? 'border-[#FF4655]/50 bg-[#FF4655]/8' : 'border-[#55FF55]/50 bg-[#55FF55]/8'}`}>
+                  <div>
+                    <p className="font-rajdhani text-sm font-bold text-white uppercase tracking-wider">
+                      Sponsors Roster Access
+                    </p>
+                    <p className="font-rajdhani text-xs text-neutral-500 mt-0.5">
+                      {eventControlData.sponsorsLocked ? 'Visitors see a locked / classified roster message' : 'Visitors can browse all sponsor logos and links freely'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditData({
+                        ...editData,
+                        eventControl: { ...eventControlData, sponsorsLocked: !eventControlData.sponsorsLocked }
+                      })
+                    }
+                    className={`shrink-0 px-5 py-2.5 font-cinzel text-xs font-black uppercase tracking-wider border sf-clip-angled-sm flex items-center gap-2 transition-all cursor-pointer ${
+                      eventControlData.sponsorsLocked
+                        ? "bg-[#FF4655]/15 border-[#FF4655] text-[#FF4655]"
+                        : "bg-[#55FF55]/15 border-[#55FF55] text-[#55FF55]"
+                    }`}
+                  >
+                    {eventControlData.sponsorsLocked ? (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        <span>LOCKED</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="w-4 h-4" />
+                        <span>OPEN</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Lock message */}
+                <div className="space-y-2">
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider">
+                    Sponsors Locked Message
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={eventControlData.sponsorsLockedMessage || ""}
+                    onChange={(e) =>
+                      setEditData({
+                        ...editData,
+                        eventControl: { ...eventControlData, sponsorsLockedMessage: e.target.value }
+                      })
+                    }
+                    className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-4 py-3 text-sm font-rajdhani outline-none focus:border-[#D4AF37] transition-colors resize-none"
+                    placeholder="Message shown when sponsors roster is locked..."
+                  />
+                  <p className="font-rajdhani text-[11px] text-neutral-500">This message is displayed to visitors when the sponsor alliances are locked.</p>
+                </div>
+
+                <button
+                  onClick={() => handleSaveSection("eventControl", eventControlData)}
+                  className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-widest flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  SAVE SPONSORS CONTROL
+                </button>
+              </div>
+
             </div>
           )}
 
@@ -1080,13 +1250,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </div>
                   )}
 
-                  {/* Gothic Title */}
+                  {/* Bold Italic / Math Title */}
                   <div className="space-y-1">
-                    <div className="sf-gothic-title text-4xl sm:text-5xl text-[#F5D061] leading-none">
-                      {loadingScreenData.titleGothic || "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"}
+                    <div className="sf-script-title sf-gothic-title text-4xl sm:text-5xl text-[#F5D061] leading-none">
+                      {loadingScreenData.titleGothic || "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0"}
                     </div>
-                    <div className="sf-gothic-title text-2xl sm:text-3xl text-[#FF4655] leading-none">
-                      {loadingScreenData.titleAccent || "'26"}
+                    <div className="sf-script-title sf-gothic-title text-2xl sm:text-3xl text-[#FF4655] leading-none">
+                      {loadingScreenData.titleAccent || "2026"}
                     </div>
                   </div>
 
@@ -1260,9 +1430,24 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </div>
 
                   <div>
-                    <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
-                      Gothic Main Title
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider">
+                        Main Title (Bold Script / Cursive)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = loadingScreenData.titleGothic || "Hackverse";
+                          setEditData({
+                            ...editData,
+                            loadingScreen: { ...loadingScreenData, titleGothic: toBoldScript(current) },
+                          });
+                        }}
+                        className="text-[11px] font-mono text-[#55FF55] hover:text-white px-2 py-0.5 border border-[#55FF55]/40 bg-[#55FF55]/10 rounded transition-colors"
+                      >
+                        ✨ Convert to 𝓣𝔂𝓹𝓮 𝓼𝓸𝓶𝓮𝓽𝓱𝓲𝓷𝓰
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={loadingScreenData.titleGothic || ""}
@@ -1272,8 +1457,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           loadingScreen: { ...loadingScreenData, titleGothic: e.target.value },
                         })
                       }
-                      placeholder="𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"
-                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0"
+                      className="w-full bg-[#141a24] border border-[#D4AF37]/40 text-white px-3.5 py-2 text-xs font-script outline-none focus:border-[#D4AF37] transition-colors"
                     />
                   </div>
 
@@ -1843,28 +2028,44 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           {activeSection === "hero" && (
             <div className="space-y-4 max-w-4xl">
               <div>
-                <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
-                  Gothic Main Title
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider">
+                    Hero Main Title (Bold Script / Cursive)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = hero.titleGothic || "Hackverse";
+                      setEditData({
+                        ...editData,
+                        hero: { ...hero, titleGothic: toBoldScript(current) },
+                      });
+                    }}
+                    className="text-[11px] font-mono text-[#55FF55] hover:text-white px-2 py-0.5 border border-[#55FF55]/40 bg-[#55FF55]/10 rounded transition-colors"
+                  >
+                    ✨ Convert to 𝓣𝔂𝓹𝓮 𝓼𝓸𝓶𝓮𝓽𝓱𝓲𝓷𝓰
+                  </button>
+                </div>
                 <input
                   type="text"
-                  value={hero.titleGothic || "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊"}
+                  value={hero.titleGothic || "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0"}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
                       hero: { ...hero, titleGothic: e.target.value },
                     })
                   }
-                  className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-base font-cinzel focus:border-[#D4AF37] outline-none"
+                  placeholder="𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0"
+                  className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-base font-script focus:border-[#D4AF37] outline-none"
                 />
               </div>
               <div>
                 <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">
-                  Title Accent (e.g. '𝟚𝟞)
+                  Title Accent (e.g. 2026)
                 </label>
                 <input
                   type="text"
-                  value={hero.titleAccent || "'𝟚𝟞"}
+                  value={hero.titleAccent || "2026"}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
@@ -3086,65 +3287,408 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
           {/* 10. BATTLEGROUND QUESTS / TRACKS */}
           {activeSection === "challenges" && (
-            <div className="space-y-4 max-w-5xl">
-              <div className="flex items-center justify-between">
-                <p className="font-rajdhani text-xs text-neutral-400">
-                  Manage battleground quest tracks and problem statement categories ({challenges.length} active).
-                </p>
-                <button
-                  onClick={() => {
-                    const newChallenge = {
-                      id: `track-${Date.now()}`,
-                      number: String(challenges.length + 1).padStart(2, "0"),
-                      title: "NEW QUEST TRACK",
-                      category: "EMERGING TECH",
-                      difficulty: "All Levels",
-                      shortDescription: "Description of the challenge track and engineering scope.",
-                    };
-                    setEditData({ ...editData, challenges: [...challenges, newChallenge] });
-                  }}
-                  className="px-3.5 py-1.5 border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 text-[#F5D061] font-rajdhani text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>ADD QUEST TRACK</span>
-                </button>
+            <div className="space-y-6 max-w-5xl">
+              {/* Battleground Quick Lock / Unlock Status Bar */}
+              <div className={`p-4 border sf-clip-angled-sm flex flex-col gap-3 ${
+                eventControlData.battlegroundsLocked
+                  ? 'border-[#FF4655]/50 bg-[#FF4655]/10'
+                  : 'border-[#55FF55]/50 bg-[#55FF55]/10'
+              }`}>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      eventControlData.battlegroundsLocked ? 'bg-[#FF4655]/20 text-[#FF4655]' : 'bg-[#55FF55]/20 text-[#55FF55]'
+                    }`}>
+                      {eventControlData.battlegroundsLocked ? <Lock className="w-5 h-5" /> : <CheckSquare className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <span className="font-cinzel font-bold text-xs text-white uppercase tracking-wider">
+                        Battleground Page Status: {eventControlData.battlegroundsLocked ? "RESTRICTED / LOCKED" : "UNLOCKED / PUBLIC"}
+                      </span>
+                      <p className="font-rajdhani text-[11px] text-neutral-400 mt-0.5">
+                        {eventControlData.battlegroundsLocked
+                          ? "Visitors see the classified restricted screen when opening Battlegrounds."
+                          : "Visitors can browse all challenge tracks and specs freely."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const updatedControl = {
+                        ...eventControlData,
+                        battlegroundsLocked: !eventControlData.battlegroundsLocked
+                      };
+                      setEditData({ ...editData, eventControl: updatedControl });
+                      await handleSaveSection("eventControl", updatedControl);
+                    }}
+                    className={`px-4 py-2 font-cinzel text-xs font-black uppercase tracking-wider border sf-clip-angled-sm flex items-center gap-2 cursor-pointer transition-all ${
+                      eventControlData.battlegroundsLocked
+                        ? "bg-[#55FF55]/20 border-[#55FF55] text-[#55FF55] hover:bg-[#55FF55]/30"
+                        : "bg-[#FF4655]/20 border-[#FF4655] text-[#FF4655] hover:bg-[#FF4655]/30"
+                    }`}
+                  >
+                    {eventControlData.battlegroundsLocked ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>UNLOCK BATTLEGROUND</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>LOCK BATTLEGROUND</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {eventControlData.battlegroundsLocked && (
+                  <div className="pt-2 border-t border-[#FF4655]/20">
+                    <label className="text-[10px] text-[#FF4655] font-bold uppercase block mb-1">
+                      Classified Locked Message Shown to Visitors
+                    </label>
+                    <input
+                      type="text"
+                      value={eventControlData.battlegroundsLockedMessage || ""}
+                      onChange={(e) => {
+                        const updated = { ...eventControlData, battlegroundsLockedMessage: e.target.value };
+                        setEditData({ ...editData, eventControl: updated });
+                      }}
+                      className="w-full bg-[#141b26] border border-[#FF4655]/40 text-white p-2 text-xs font-mono focus:border-[#FF4655] outline-none"
+                      placeholder="BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE."
+                    />
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-3 max-h-[55vh] overflow-y-auto p-1">
+              {/* Battlegrounds Page Header & 4 Stats Configuration */}
+              <div className="p-5 border border-[#D4AF37]/30 bg-[#0c1017] sf-clip-angled-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#F5D061]" />
+                    <h4 className="font-cinzel font-bold text-sm text-white uppercase tracking-wider">
+                      Battlegrounds Page Header & Combat Stats
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => handleSaveSection("battlegrounds", battlegroundsData)}
+                    className="px-4 py-1.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-wider flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>SAVE HEADER & STATS</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
+                      Main Page Title
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.title || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, title: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-cinzel font-bold"
+                      placeholder="Battlegrounds"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
+                      Badge / Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.subtitle || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, subtitle: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani font-bold"
+                      placeholder="HACKVERSE '26"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
+                    Header Description Paragraph
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={battlegroundsData.description || ""}
+                    onChange={(e) =>
+                      setEditData({
+                        ...editData,
+                        battlegrounds: { ...battlegroundsData, description: e.target.value }
+                      })
+                    }
+                    className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani"
+                    placeholder="Five elite combat domains. Choose your battleground wisely..."
+                  />
+                </div>
+
+                {/* 4 Stats Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Combat Tracks
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.tracksCount || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, tracksCount: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-[#F5D061] p-1.5 text-xs font-cinzel font-bold"
+                      placeholder="5"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Prize Pool
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.prizePool || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, prizePool: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-[#F5D061] p-1.5 text-xs font-cinzel font-bold"
+                      placeholder="1,50,000+"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Duration
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.duration || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, duration: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-[#F5D061] p-1.5 text-xs font-cinzel font-bold"
+                      placeholder="24 HOURS"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Team Size
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.teamSize || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, teamSize: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-[#F5D061] p-1.5 text-xs font-cinzel font-bold"
+                      placeholder="2-4 WARRIORS"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#D4AF37]/15">
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Bottom CTA Subtext
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.bottomCtaText || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, bottomCtaText: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-rajdhani"
+                      placeholder="CANT DECIDE? REGISTER AND PICK YOUR TRACK ON ARRIVAL."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                      Bottom CTA Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={battlegroundsData.bottomCtaButton || ""}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          battlegrounds: { ...battlegroundsData, bottomCtaButton: e.target.value }
+                        })
+                      }
+                      className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-[#F5D061] p-1.5 text-xs font-cinzel font-bold"
+                      placeholder="JOIN THE BATTLE - ITS FREE"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Challenge Tracks List Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#D4AF37]/20">
+                <div>
+                  <h4 className="font-cinzel font-bold text-sm text-white uppercase tracking-wider flex items-center gap-2">
+                    <Swords className="w-4 h-4 text-[#FFAA00]" />
+                    <span>Combat Tracks & Dossier Specifications ({challenges.length} Active)</span>
+                  </h4>
+                  <p className="font-rajdhani text-xs text-neutral-400 mt-0.5">
+                    Admin can edit all specs, delete tracks, preview live dossiers, and add new battlegrounds.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newChallenge = {
+                        id: `track-${Date.now()}`,
+                        number: String(challenges.length + 1).padStart(2, "0"),
+                        title: "NEW QUEST TRACK",
+                        category: "INTELLIGENCE SYSTEMS",
+                        difficulty: "All Levels",
+                        shortDescription: "Description of the challenge track and engineering scope.",
+                        problemStatement: "Problem specification and challenge scope detailed objective.",
+                        requirements: "1. Working prototype demonstration\n2. Clean architecture and documentation",
+                        judgingCriteria: "Novelty of algorithmic solution (35%)\nReal-world viability (35%)\nUX and execution (30%)",
+                        skills: "Python, TypeScript, APIs",
+                        image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop"
+                      };
+                      setEditData({ ...editData, challenges: [...challenges, newChallenge] });
+                    }}
+                    className="px-3.5 py-1.5 border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 text-[#F5D061] font-rajdhani text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>ADD TRACK</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveChallenges()}
+                    className="px-4 py-1.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-wider flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>SAVE ALL TRACKS</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Challenge Tracks Cards */}
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1 custom-admin-scrollbar">
                 {challenges.map((ch, idx) => (
                   <div
                     key={ch.id || idx}
-                    className="p-4 border border-[#D4AF37]/25 bg-[#0e131d] sf-clip-angled-sm space-y-2 relative"
+                    className="p-4 sm:p-5 border border-[#D4AF37]/25 bg-[#0e131d] sf-clip-angled-sm space-y-3 relative hover:border-[#D4AF37]/60 transition-all"
                   >
-                    <button
-                      onClick={() => {
-                        const updated = challenges.filter((_, i) => i !== idx);
-                        setEditData({ ...editData, challenges: updated });
-                      }}
-                      className="absolute top-3 right-3 text-neutral-500 hover:text-[#FF4655] p-1 cursor-pointer"
-                      title="Delete quest"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* Card Header with Track Info & Action Buttons */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#D4AF37]/20 pb-3 gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-2.5 py-1 bg-[#FFAA00] text-black font-mono font-black text-xs shadow-[2px_2px_0px_#000]">
+                          TRACK {ch.number || String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <span className="font-cinzel font-bold text-sm text-[#F5D061] uppercase tracking-wider">
+                          {ch.title || "UNTITLED QUEST TRACK"}
+                        </span>
+                        <span className="text-[11px] font-rajdhani font-bold px-2 py-0.5 border border-[#55FF55]/40 text-[#55FF55] bg-[#55FF55]/10">
+                          {ch.difficulty || "All Levels"}
+                        </span>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <div className="flex items-center gap-2">
+                        {/* Live Dossier Preview Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const parseList = (val: any): string[] => {
+                              if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
+                              if (typeof val === "string") return val.split("\n").map((s) => s.trim().replace(/^[-*•\d.]+\s*/, '')).filter(Boolean);
+                              return [];
+                            };
+                            const parseCsv = (val: any): string[] => {
+                              if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
+                              if (typeof val === "string") return val.split(",").map((s) => s.trim()).filter(Boolean);
+                              return [];
+                            };
+
+                            setPreviewModalChallenge({
+                              id: ch.id || `track-${idx + 1}`,
+                              number: ch.number || String(idx + 1).padStart(2, "0"),
+                              title: ch.title || "UNTITLED QUEST",
+                              category: ch.category || "INTELLIGENCE SYSTEMS",
+                              difficulty: ch.difficulty || "All Levels",
+                              shortDescription: ch.shortDescription || "",
+                              problemStatement: ch.problemStatement || "",
+                              requirements: parseList(ch.requirements),
+                              judgingCriteria: parseList(ch.judgingCriteria),
+                              skills: parseCsv(ch.skills),
+                              image: ch.image || "",
+                            } as Challenge);
+                          }}
+                          className="px-3 py-1 bg-[#55FF55]/15 hover:bg-[#55FF55]/30 border border-[#55FF55]/60 text-[#55FF55] font-rajdhani text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all"
+                          title="Preview the exact Quest Dossier modal as shown to warriors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>PREVIEW DOSSIER</span>
+                        </button>
+
+                        {/* Permanent Delete Track Button */}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const trackTitle = ch.title || `Track ${ch.number || idx + 1}`;
+                            if (window.confirm(`Are you sure you want to permanently delete "${trackTitle}"? This will immediately remove it from Battlegrounds.`)) {
+                              const updated = challenges.filter((_, i) => i !== idx);
+                              setEditData({ ...editData, challenges: updated });
+                              await handleSaveChallenges(updated);
+                            }
+                          }}
+                          className="px-3 py-1 bg-[#FF4655]/15 hover:bg-[#FF4655]/30 border border-[#FF4655]/60 text-[#FF4655] font-rajdhani text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all"
+                          title="Delete this track and update live database"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>DELETE TRACK</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Row 1: Track Number, Quest Title, Difficulty */}
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                       <div>
-                        <label className="text-[10px] text-neutral-400 font-bold uppercase block">
-                          Track #
+                        <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
+                          Track Number
                         </label>
                         <input
                           type="text"
                           value={ch.number || ""}
                           onChange={(e) => {
                             const updated = [...challenges];
-                            updated[idx].number = e.target.value;
+                            updated[idx] = { ...updated[idx], number: e.target.value };
                             setEditData({ ...editData, challenges: updated });
                           }}
-                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-rajdhani"
+                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-mono font-bold"
+                          placeholder="01"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-[10px] text-neutral-400 font-bold uppercase block">
+                        <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
                           Quest Title
                         </label>
                         <input
@@ -3152,24 +3696,25 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           value={ch.title || ""}
                           onChange={(e) => {
                             const updated = [...challenges];
-                            updated[idx].title = e.target.value;
+                            updated[idx] = { ...updated[idx], title: e.target.value };
                             setEditData({ ...editData, challenges: updated });
                           }}
-                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-cinzel font-bold"
+                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-cinzel font-bold"
+                          placeholder="AI & MACHINE LEARNING"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-neutral-400 font-bold uppercase block">
-                          Difficulty
+                        <label className="text-[10px] text-[#F5D061] font-bold uppercase block mb-1">
+                          Difficulty Tier
                         </label>
                         <select
                           value={ch.difficulty || "All Levels"}
                           onChange={(e) => {
                             const updated = [...challenges];
-                            updated[idx].difficulty = e.target.value;
+                            updated[idx] = { ...updated[idx], difficulty: e.target.value };
                             setEditData({ ...editData, challenges: updated });
                           }}
-                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-rajdhani"
+                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani font-bold"
                         >
                           <option value="All Levels">All Levels</option>
                           <option value="Intermediate">Intermediate</option>
@@ -3178,48 +3723,150 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-[10px] text-neutral-400 font-bold uppercase block">
-                        Category Tag
-                      </label>
-                      <input
-                        type="text"
-                        value={ch.category || ""}
-                        onChange={(e) => {
-                          const updated = [...challenges];
-                          updated[idx].category = e.target.value;
-                          setEditData({ ...editData, challenges: updated });
-                        }}
-                        className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-rajdhani"
-                      />
+                    {/* Row 2: Category Tag & Cover Image URL */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                          Category / Classification Tag
+                        </label>
+                        <input
+                          type="text"
+                          value={ch.category || ""}
+                          onChange={(e) => {
+                            const updated = [...challenges];
+                            updated[idx] = { ...updated[idx], category: e.target.value };
+                            setEditData({ ...editData, challenges: updated });
+                          }}
+                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani font-bold"
+                          placeholder="INTELLIGENCE SYSTEMS"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                          Cover Image URL
+                        </label>
+                        <input
+                          type="text"
+                          value={ch.image || ""}
+                          onChange={(e) => {
+                            const updated = [...challenges];
+                            updated[idx] = { ...updated[idx], image: e.target.value };
+                            setEditData({ ...editData, challenges: updated });
+                          }}
+                          className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-mono text-[#D4AF37]"
+                          placeholder="https://images.unsplash.com/..."
+                        />
+                      </div>
                     </div>
 
+                    {/* Row 3: Short Summary (Card Preview) */}
                     <div>
-                      <label className="text-[10px] text-neutral-400 font-bold uppercase block">
-                        Short Description
+                      <label className="text-[10px] text-neutral-400 font-bold uppercase block mb-1">
+                        Short Summary (Card Preview)
                       </label>
                       <textarea
                         rows={2}
                         value={ch.shortDescription || ""}
                         onChange={(e) => {
                           const updated = [...challenges];
-                          updated[idx].shortDescription = e.target.value;
+                          updated[idx] = { ...updated[idx], shortDescription: e.target.value };
                           setEditData({ ...editData, challenges: updated });
                         }}
-                        className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-1.5 text-xs font-rajdhani"
+                        className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani leading-relaxed"
+                        placeholder="Brief overview displayed on the battleground track cards..."
+                      />
+                    </div>
+
+                    {/* Row 4: Problem Specification & Objective (Dossier Modal) */}
+                    <div>
+                      <label className="text-[10px] text-[#FFDF78] font-bold uppercase block mb-1 flex items-center gap-1.5">
+                        <Terminal className="w-3.5 h-3.5 text-[#55FF55]" />
+                        <span>Problem Specification & Objective (Quest Dossier Modal)</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={ch.problemStatement || ""}
+                        onChange={(e) => {
+                          const updated = [...challenges];
+                          updated[idx] = { ...updated[idx], problemStatement: e.target.value };
+                          setEditData({ ...editData, challenges: updated });
+                        }}
+                        className="w-full bg-[#141b26] border border-[#D4AF37]/40 text-neutral-100 p-2 text-xs font-mono leading-relaxed focus:border-[#FFDF78] outline-none"
+                        placeholder="Detailed engineering problem specifications, system constraints, and objectives..."
+                      />
+                    </div>
+
+                    {/* Row 5: Core Requirements & Evaluation Benchmarks */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] text-[#55FF55] font-bold uppercase block mb-1 flex items-center gap-1.5">
+                          <CheckSquare className="w-3.5 h-3.5 text-[#55FF55]" />
+                          <span>Core Requirements (1 per line)</span>
+                        </label>
+                        <textarea
+                          rows={5}
+                          value={Array.isArray(ch.requirements) ? ch.requirements.join("\n") : (ch.requirements || "")}
+                          onChange={(e) => {
+                            const updated = [...challenges];
+                            updated[idx] = { ...updated[idx], requirements: e.target.value };
+                            setEditData({ ...editData, challenges: updated });
+                          }}
+                          className="w-full bg-[#141b26] border border-[#55FF55]/40 text-neutral-100 p-2 text-xs font-mono leading-relaxed focus:border-[#55FF55] outline-none"
+                          placeholder="Multi-modal pipeline processing text, sensor, or audio streams.&#10;Sub-200ms latency inference using edge quantization.&#10;Explainable AI metrics explaining decision pathways.&#10;Evaluation benchmark showing resilience against noisy inputs."
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-[#FFDF78] font-bold uppercase block mb-1 flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 text-[#FFDF78]" />
+                          <span>Evaluation Benchmarks (1 per line)</span>
+                        </label>
+                        <textarea
+                          rows={5}
+                          value={Array.isArray(ch.judgingCriteria) ? ch.judgingCriteria.join("\n") : (ch.judgingCriteria || "")}
+                          onChange={(e) => {
+                            const updated = [...challenges];
+                            updated[idx] = { ...updated[idx], judgingCriteria: e.target.value };
+                            setEditData({ ...editData, challenges: updated });
+                          }}
+                          className="w-full bg-[#141b26] border border-[#FFDF78]/40 text-neutral-100 p-2 text-xs font-mono leading-relaxed focus:border-[#FFDF78] outline-none"
+                          placeholder="Novelty of algorithmic solution (30%)&#10;Real-world operational viability (25%)&#10;Latency & efficiency benchmarks (25%)&#10;Human-in-the-loop UX (20%)"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 6: Recommended Tooling & Protocols */}
+                    <div>
+                      <label className="text-[10px] text-[#FFAA00] font-bold uppercase block mb-1">
+                        Recommended Tooling & Protocols / Tech Skills (Comma Separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={Array.isArray(ch.skills) ? ch.skills.join(", ") : (ch.skills || "")}
+                        onChange={(e) => {
+                          const updated = [...challenges];
+                          updated[idx] = { ...updated[idx], skills: e.target.value };
+                          setEditData({ ...editData, challenges: updated });
+                        }}
+                        className="w-full bg-[#141b26] border border-[#FFAA00]/40 text-white p-2 text-xs font-mono focus:border-[#FFAA00] outline-none"
+                        placeholder="PyTorch, LLMs & Agents, Computer Vision, FastAPI, Vector DBs"
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="pt-2">
+              {/* Bottom Save Action Bar */}
+              <div className="pt-3 flex items-center justify-between border-t border-[#D4AF37]/20">
+                <span className="font-rajdhani text-xs text-neutral-400">
+                  {challenges.length} challenge tracks configured. Changes sync to both Cloud and Local storage.
+                </span>
                 <button
-                  onClick={() => handleSaveSection("challenges", editData.challenges)}
+                  type="button"
+                  onClick={() => handleSaveChallenges()}
                   className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2 cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
-                  <span>SAVE QUEST TRACKS</span>
+                  <span>SAVE ALL QUEST TRACKS</span>
                 </button>
               </div>
             </div>
@@ -3577,6 +4224,80 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           {/* 14. SPONSORS & ALLIES */}
           {activeSection === "sponsors" && (
             <div className="space-y-4 max-w-5xl">
+              {/* Sponsors Quick Lock / Unlock Status Bar */}
+              <div className={`p-4 border sf-clip-angled-sm flex flex-col gap-3 ${
+                eventControlData.sponsorsLocked
+                  ? 'border-[#FF4655]/50 bg-[#FF4655]/10'
+                  : 'border-[#55FF55]/50 bg-[#55FF55]/10'
+              }`}>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      eventControlData.sponsorsLocked ? 'bg-[#FF4655]/20 text-[#FF4655]' : 'bg-[#55FF55]/20 text-[#55FF55]'
+                    }`}>
+                      {eventControlData.sponsorsLocked ? <Lock className="w-5 h-5" /> : <CheckSquare className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <span className="font-cinzel font-bold text-xs text-white uppercase tracking-wider">
+                        Sponsors Section Status: {eventControlData.sponsorsLocked ? "RESTRICTED / LOCKED" : "UNLOCKED / PUBLIC"}
+                      </span>
+                      <p className="font-rajdhani text-[11px] text-neutral-400 mt-0.5">
+                        {eventControlData.sponsorsLocked
+                          ? "Visitors see the classified restricted screen when viewing the Sponsors section."
+                          : "Visitors can browse all partner logos and tiers freely."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const updatedControl = {
+                        ...eventControlData,
+                        sponsorsLocked: !eventControlData.sponsorsLocked
+                      };
+                      setEditData({ ...editData, eventControl: updatedControl });
+                      await handleSaveSection("eventControl", updatedControl);
+                    }}
+                    className={`px-4 py-2 font-cinzel text-xs font-black uppercase tracking-wider border sf-clip-angled-sm flex items-center gap-2 cursor-pointer transition-all ${
+                      eventControlData.sponsorsLocked
+                        ? "bg-[#55FF55]/20 border-[#55FF55] text-[#55FF55] hover:bg-[#55FF55]/30"
+                        : "bg-[#FF4655]/20 border-[#FF4655] text-[#FF4655] hover:bg-[#FF4655]/30"
+                    }`}
+                  >
+                    {eventControlData.sponsorsLocked ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>UNLOCK SPONSORS</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>LOCK SPONSORS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {eventControlData.sponsorsLocked && (
+                  <div className="pt-2 border-t border-[#FF4655]/20">
+                    <label className="text-[10px] text-[#FF4655] font-bold uppercase block mb-1">
+                      Classified Locked Message Shown to Visitors
+                    </label>
+                    <input
+                      type="text"
+                      value={eventControlData.sponsorsLockedMessage || ""}
+                      onChange={(e) => {
+                        const updated = { ...eventControlData, sponsorsLockedMessage: e.target.value };
+                        setEditData({ ...editData, eventControl: updated });
+                      }}
+                      className="w-full bg-[#141b26] border border-[#FF4655]/40 text-white p-2 text-xs font-mono focus:border-[#FF4655] outline-none"
+                      placeholder="SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH."
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between">
                 <p className="font-rajdhani text-xs text-neutral-400">
                   Manage industry sponsors and ecosystem partners ({sponsors.length} active). Add logos, tiers, and roles.
@@ -4353,6 +5074,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </form>
           </motion.div>
         </div>
+      )}
+
+      {/* Live Challenge Dossier Preview Modal */}
+      {previewModalChallenge && createPortal(
+        <ChallengeModal
+          challenge={previewModalChallenge}
+          isOpen={!!previewModalChallenge}
+          onClose={() => setPreviewModalChallenge(null)}
+          onSelectForRegister={() => setPreviewModalChallenge(null)}
+        />,
+        document.body
       )}
     </div>
   );

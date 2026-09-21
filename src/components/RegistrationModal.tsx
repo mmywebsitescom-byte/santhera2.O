@@ -20,6 +20,17 @@ export default function RegistrationModal({ isOpen, onClose, preSelectedChalleng
   const regConfig = content?.registrationForm || {};
   const isPortalOpen = regConfig.isOpen !== false;
 
+  const allChallenges = (content.challenges && content.challenges.length > 0)
+    ? content.challenges.map((c, i) => {
+        const fallbackMatch = CHALLENGES.find((fc) => fc.id === c.id || fc.title.toLowerCase() === c.title.toLowerCase());
+        return {
+          id: c.id || `c-${i}`,
+          number: c.number || String(i + 1).padStart(2, '0'),
+          title: c.title,
+        };
+      })
+    : CHALLENGES;
+
   const [step, setStep] = useState<ModalStep>('signup');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
@@ -34,7 +45,7 @@ export default function RegistrationModal({ isOpen, onClose, preSelectedChalleng
     collegeOrOrg: '',
     teamName: '',
     teamMembers: ['', ''],
-    selectedChallenge: preSelectedChallengeId || CHALLENGES[0].id,
+    selectedChallenge: preSelectedChallengeId || allChallenges[0]?.id || CHALLENGES[0].id,
     experienceLevel: 'Intermediate',
     githubOrPortfolio: '',
     trackNotes: '',
@@ -475,7 +486,7 @@ export default function RegistrationModal({ isOpen, onClose, preSelectedChalleng
                         className="sf-input-gothic"
                         id="reg-challenge-select"
                       >
-                        {CHALLENGES.map((c) => (
+                        {allChallenges.map((c) => (
                           <option key={c.id} value={c.id} className="bg-[#06090E] text-[#F5D061]">
                             {c.number}: {c.title}
                           </option>
@@ -611,7 +622,7 @@ export default function RegistrationModal({ isOpen, onClose, preSelectedChalleng
                     <div>
                       <span className="text-neutral-500 block text-[10px] tracking-wider uppercase mb-0.5">Selected Quest</span>
                       <span className="text-[#55FF55] font-bold">
-                        {CHALLENGES.find((c) => c.id === ticket.data.selectedChallenge)?.title || ticket.data.selectedChallenge}
+                        {allChallenges.find((c) => c.id === ticket.data.selectedChallenge)?.title || ticket.data.selectedChallenge}
                       </span>
                     </div>
                   </div>

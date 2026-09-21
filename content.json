@@ -2,8 +2,8 @@
   "eventInfo": {
     "name": "TECHXERA HACKFEST '26",
     "shortName": "HACKFEST '26",
-    "titleGothic": "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    "titleAccent": "'𝟚𝟞",
+    "titleGothic": "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    "titleAccent": "2026",
     "tagline": "BUILD. BREAK. INNOVATE.",
     "dates": "september 25– 25, 2026",
     "venue": "Government College of Engineering Kalahandi",
@@ -14,8 +14,8 @@
     "edition": "EDITION 04"
   },
   "hero": {
-    "titleGothic": "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    "titleAccent": "'𝟚𝟞",
+    "titleGothic": "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    "titleAccent": "2026",
     "subheadline": "WHERE WARRIORS CODE // 12 HOURS OF CODE, HARDWARE & INTELLIGENCE",
     "description": "Assemble your squad of 2 to 4 engineers at the Government College of Engineering Kalahandi bamboo arena. Non-stop battleground programming, classified quests, and ₹10,000+ bounty pool.",
     "seatsClaimed": 18,
@@ -162,12 +162,185 @@
   },
   "challenges": [
     {
+      "id": "ai-ml",
+      "number": "01",
+      "title": "AI & MACHINE LEARNING",
+      "category": "INTELLIGENCE SYSTEMS",
+      "difficulty": "Advanced",
+      "shortDescription": "Build intelligent, autonomous systems that solve high-friction real-world problems using state-of-the-art models.",
+      "skills": [
+        "PyTorch",
+        "LLMs & Agents",
+        "Computer Vision",
+        "FastAPI",
+        "Vector DBs"
+      ],
+      "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop",
+      "problemStatement": "Modern industrial, biomedical, and socio-economic systems produce petabytes of complex multi-modal telemetry. Current deterministic software fails when edge conditions change unexpectedly.",
+      "requirements": [
+        "Multi-modal pipeline processing text, sensor, visual, or audio streams.",
+        "Sub-200ms latency inference using edge quantization or optimized serving.",
+        "Explainable AI metrics explaining decision pathways to operators.",
+        "Evaluation benchmark showing resilience against noisy or adversarial inputs."
+      ],
+      "recommendedTech": [
+        "Python / PyTorch",
+        "Gemini 1.5 Pro / Flash",
+        "LangGraph / LlamaIndex",
+        "Milvus / Qdrant",
+        "WebAssembly runtime"
+      ],
+      "judgingCriteria": [
+        "Novelty of algorithmic solution (30%)",
+        "Real-world operational viability (25%)",
+        "Latency & efficiency benchmarks (25%)",
+        "Human-in-the-loop UX (20%)"
+      ],
+      "expectedOutput": "Working prototype container with live API demonstration and benchmark report."
+    },
+    {
+      "id": "web-app",
+      "number": "02",
+      "title": "WEB & APP DEVELOPMENT",
+      "category": "DIGITAL INFRASTRUCTURE",
+      "difficulty": "All Levels",
+      "shortDescription": "Create useful, blazing-fast, and resilient digital products that scale to millions of concurrent users with zero downtime.",
+      "skills": [
+        "TypeScript",
+        "Next.js / Vite",
+        "Distributed Systems",
+        "Tailwind",
+        "Realtime WebSockets"
+      ],
+      "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&auto=format&fit=crop",
+      "problemStatement": "Distributed teams and mission-critical workflows suffer from fragmented tooling, high cognitive friction, and clunky legacy interfaces that slow down human collaboration.",
+      "requirements": [
+        "Collaborative real-time synchronization (CRDT or conflict-free sync).",
+        "Offline-first architecture with progressive background sync.",
+        "Accessible, tactile design achieving 95+ Lighthouse audit scores.",
+        "Granular permission and multi-tenant security architecture."
+      ],
+      "recommendedTech": [
+        "React / Vite / TypeScript",
+        "Tailwind CSS",
+        "Node.js / Go",
+        "PostgreSQL / Supabase",
+        "WebSockets / WebRTC"
+      ],
+      "judgingCriteria": [
+        "UI/UX craftsmanship and fluid micro-interactions (30%)",
+        "Architecture scalability and latency resilience (30%)",
+        "Feature completeness within 48-hour scope (25%)",
+        "Clean modular codebase & documentation (15%)"
+      ],
+      "expectedOutput": "Deployed web application with interactive collaborative multi-user demo."
+    },
+    {
+      "id": "cyber-security",
+      "number": "03",
+      "title": "CYBER SECURITY",
+      "category": "DEFENSIVE & OFFENSIVE TECH",
+      "difficulty": "Advanced",
+      "shortDescription": "Design cryptographic protocols, threat detection tools, and hardened solutions that safeguard digital autonomy.",
+      "skills": [
+        "Rust",
+        "Zero-Knowledge Proofs",
+        "Threat Intelligence",
+        "eBPF",
+        "Network Analysis"
+      ],
+      "image": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200&auto=format&fit=crop",
+      "problemStatement": "As software complexity multiplies and autonomous agents proliferate, identity spoofing, credential theft, and supply-chain vulnerabilities compromise global digital safety.",
+      "requirements": [
+        "Automated vulnerability mitigation or real-time anomaly detection engine.",
+        "Cryptographically verifiable zero-trust identity assertion.",
+        "Low CPU overhead execution suitable for enterprise cloud environments.",
+        "Reproducible proof-of-exploit or defensive security hardening test."
+      ],
+      "recommendedTech": [
+        "Rust / C++",
+        "eBPF / Linux Kernel APIs",
+        "Snort / Suricata integration",
+        "ZK-SNARKs / Circom",
+        "Docker / K8s security"
+      ],
+      "judgingCriteria": [
+        "Cryptographic or defensive soundness (35%)",
+        "Detection accuracy & false-positive minimization (30%)",
+        "Performance impact on host machine (20%)",
+        "Security audit report & documentation (15%)"
+      ],
+      "expectedOutput": "Reproducible security agent/tool with live test vector demonstration."
+    },
+    {
+      "id": "iot-robotics",
+      "number": "04",
+      "title": "IOT & ROBOTICS",
+      "category": "CYBER-PHYSICAL SYSTEMS",
+      "difficulty": "Intermediate",
+      "shortDescription": "Connect microcontrollers, sensor meshes, and robotics to cloud orchestrators to transform physical environments.",
+      "skills": [
+        "Embedded C/C++",
+        "ROS 2",
+        "MQTT / WebSockets",
+        "Hardware Prototyping",
+        "Spatial Compute"
+      ],
+      "image": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1200&auto=format&fit=crop",
+      "problemStatement": "Physical factories, smart cities, and agricultural fields remain detached from actionable predictive intelligence due to brittle device connectivity and power limits.",
+      "requirements": [
+        "Integration between edge hardware (simulated or physical) and dashboard.",
+        "Fault-tolerant data queuing over intermittent network conditions.",
+        "Low power consumption design with energy budgeting.",
+        "Actionable command-and-control telemetry with emergency kill switches."
+      ],
+      "recommendedTech": [
+        "ESP32 / Raspberry Pi",
+        "MQTT / gRPC",
+        "ROS 2 / Gazebo Sim",
+        "React Dashboard",
+        "Grafana / InfluxDB"
+      ],
+      "judgingCriteria": [
+        "Hardware-software integration fidelity (35%)",
+        "Reliability under simulated packet loss (25%)",
+        "Sensory data visualization (20%)",
+        "Physical safety fail-safes (20%)"
+      ],
+      "expectedOutput": "Live hardware rig or high-fidelity ROS/Gazebo simulation with sensor streaming."
+    },
+    {
       "id": "open-innovation",
       "number": "05",
       "title": "OPEN INNOVATION",
       "category": "MOONSHOT & EXPERIMENTAL",
       "difficulty": "All Levels",
-      "shortDescription": "Bring your boldest, uncategorizable idea. From decentralized protocols to neurotech and green computing."
+      "shortDescription": "Bring your boldest, uncategorizable idea. From decentralized protocols to neurotech and green computing.",
+      "skills": [
+        "Creativity",
+        "Cross-Disciplinary",
+        "Rapid Prototyping",
+        "User Research",
+        "Full-Stack"
+      ],
+      "image": "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=1200&auto=format&fit=crop",
+      "problemStatement": "Groundbreaking inventions rarely fit into traditional categories. We give fearless hackers blank-canvas freedom to test radical hypotheses.",
+      "requirements": [
+        "Demonstrable prototype addressing a verified societal or technological challenge.",
+        "Clear thesis on why existing approaches fail.",
+        "Feasibility roadmap explaining how 48 hours is only the starting point.",
+        "Compelling, high-fidelity demo showcasing real execution capability."
+      ],
+      "recommendedTech": [
+        "Any modern language, framework, API, or hardware platform."
+      ],
+      "judgingCriteria": [
+        "Originality and audacious ambition (40%)",
+        "Depth of functional execution within 48h (30%)",
+        "Potential impact and viability (20%)",
+        "Presentation clarity and stage presence (10%)"
+      ],
+      "expectedOutput": "Functioning prototype with live product narrative."
     }
   ],
   "timeline": [
@@ -271,9 +444,22 @@
     }
   ],
   "eventControl": {
-    "countdownTargetDate": "2026-09-26T02:30:00.000Z",
+    "sponsorsLocked": true,
     "battlegroundsLocked": false,
+    "countdownTargetDate": "2026-09-26T02:30:00.000Z",
+    "sponsorsLockedMessage": "SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH.",
     "battlegroundsLockedMessage": "BATTLEGROUNDS INTEL IS CLASSIFIED. CHECK BACK CLOSER TO THE EVENT DATE."
+  },
+  "battlegrounds": {
+    "title": "Battlegrounds",
+    "subtitle": "HACKVERSE '26",
+    "description": "Five elite combat domains. Choose your battleground wisely — each track tests a different dimension of engineering mastery. Only the most prepared squads will claim the bounty.",
+    "tracksCount": "5",
+    "prizePool": "1,50,000+",
+    "duration": "24 HOURS",
+    "teamSize": "2-4 WARRIORS",
+    "bottomCtaText": "CANT DECIDE? REGISTER AND PICK YOUR TRACK ON ARRIVAL.",
+    "bottomCtaButton": "JOIN THE BATTLE - ITS FREE"
   },
   "adminSettings": {
     "email": "techxerahack@gmail.com",
@@ -282,13 +468,13 @@
   "loadingScreen": {
     "enabled": true,
     "logoUrl": "",
-    "showLogo": true,
-    "presentsText": "TECHXERA PRESENTS",
-    "titleGothic": "𝕳𝖆𝖈𝖐𝖛𝖊𝖗𝖘𝖊",
-    "titleAccent": "'26",
     "tagline": "BUILD THE FUTURE • ENTER THE ARENA",
+    "showLogo": true,
+    "allowSkip": true,
     "durationMs": 4600,
-    "allowSkip": true
+    "titleAccent": "2026",
+    "titleGothic": "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
+    "presentsText": "TECHXERA PRESENTS"
   },
   "registrations": []
 }

@@ -17,16 +17,32 @@ export default function ChallengeModal({
 }: ChallengeModalProps) {
   if (!isOpen || !challenge) return null;
 
+  const parseArray = (val: unknown): string[] => {
+    if (Array.isArray(val) && val.length > 0) return val.map(String).filter(Boolean);
+    if (typeof val === 'string' && val.trim()) {
+      return val.includes('\n')
+        ? val.split('\n').map((s) => s.trim().replace(/^[-*•\d.]+\s*/, '')).filter(Boolean)
+        : val.split(',').map((s) => s.trim().replace(/^[-*•\d.]+\s*/, '')).filter(Boolean);
+    }
+    return [];
+  };
+
+  const requirements = parseArray(challenge.requirements);
+  const judgingCriteria = parseArray(challenge.judgingCriteria);
+  const skills = parseArray(challenge.skills);
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto select-none">
-        {/* Backdrop */}
+      {/* Full-screen portal root — sits above everything including navbar (z-50) */}
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 overflow-y-auto select-none">
+        {/* Backdrop — fully opaque dark overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/80"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm"
+          style={{ zIndex: 0 }}
         />
 
         {/* HackVerse Retro Dialog Box */}
@@ -35,7 +51,8 @@ export default function ChallengeModal({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.96 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-[#C6C6C6] border-4 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#555555] border-b-[#555555] shadow-[8px_8px_0px_#000] z-10"
+          className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-[#C6C6C6] border-4 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#555555] border-b-[#555555] shadow-[8px_8px_0px_#000]"
+          style={{ zIndex: 1 }}
         >
           {/* Windows 95 / Retro Arcade Window Title Bar */}
           <div className="bg-[#2A2A2A] text-white px-3 py-2 flex items-center justify-between border-b-2 border-[#555555]">
@@ -90,7 +107,7 @@ export default function ChallengeModal({
                   <span>CORE REQUIREMENTS</span>
                 </h4>
                 <ul className="space-y-2 font-mono text-xs text-neutral-300">
-                  {challenge.requirements.map((req, idx) => (
+                  {requirements.map((req, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-[#FFAA00] font-bold shrink-0">{idx + 1}.</span>
                       <span>{req}</span>
@@ -106,7 +123,7 @@ export default function ChallengeModal({
                   <span>EVALUATION BENCHMARKS</span>
                 </h4>
                 <ul className="space-y-2 font-mono text-xs text-neutral-300">
-                  {challenge.judgingCriteria.map((crit, idx) => (
+                  {judgingCriteria.map((crit, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-[#55FF55] font-bold shrink-0">•</span>
                       <span>{crit}</span>
@@ -122,7 +139,7 @@ export default function ChallengeModal({
                 RECOMMENDED TOOLING & PROTOCOLS:
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {challenge.skills.map((s) => (
+                {skills.map((s) => (
                   <span
                     key={s}
                     className="px-2 py-0.5 bg-[#2B2B2B] text-neutral-200 border border-[#555] font-mono text-[10px]"
