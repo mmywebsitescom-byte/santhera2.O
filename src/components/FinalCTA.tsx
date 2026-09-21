@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowRight, Terminal, Sparkles } from 'lucide-react';
+import { ArrowRight, Terminal } from 'lucide-react';
+import { useSiteContent } from '../context/ContentContext';
 
 interface FinalCTAProps {
   onOpenRegister: () => void;
@@ -8,6 +9,8 @@ interface FinalCTAProps {
 
 export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const { content } = useSiteContent();
+  const cta = content?.finalCta || {};
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -22,6 +25,13 @@ export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const badge = cta.badge || 'OFFLINE REGISTRATION WINDOW IS LIVE';
+  const title = cta.title || 'READY TO ENTER';
+  const titleAccent = cta.titleAccent || 'THE HACKVERSE?';
+  const description = cta.description || 'October 16, 2026 at Government College of Engineering Kalahandi. 24 hours of non-stop building, classified quests, and ₹1,50,000+ in rewards.';
+  const registerLabel = cta.registerLabel || 'REGISTER YOUR TEAM NOW';
+  const browseLabel = cta.browseLabel || 'BROWSE PROBLEM STATEMENTS';
 
   return (
     <section
@@ -43,16 +53,16 @@ export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
       <div className="max-w-4xl mx-auto relative z-10 space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#101010] border-2 border-[#FFAA00] font-mono text-xs text-[#FFDF78] font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000] [text-shadow:_1px_1px_0_#000]">
           <span className="w-2 h-2 rounded-none bg-[#55FF55] inline-block shadow-[1px_1px_0_#000] animate-pulse" />
-          <span>OFFLINE REGISTRATION WINDOW IS LIVE</span>
+          <span>{badge}</span>
         </div>
 
         <h2 className="font-mono font-black text-4xl sm:text-6xl md:text-7xl text-white tracking-tight leading-tight uppercase [text-shadow:_3px_3px_0_#000,-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000]">
-          READY TO ENTER <br />
-          <span className="text-[#55FF55]">THE HACKVERSE?</span>
+          {title} <br />
+          <span className="text-[#55FF55]">{titleAccent}</span>
         </h2>
 
         <p className="font-mono text-xs sm:text-sm text-neutral-300 max-w-lg mx-auto leading-relaxed [text-shadow:_1px_1px_0_#000]">
-          October 16, 2026 at Government College of Engineering Kalahandi. 24 hours of non-stop building, classified quests, and ₹1,50,000+ in rewards.
+          {description}
         </p>
 
         {/* HackVerse Minecraft Action Buttons */}
@@ -62,7 +72,7 @@ export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
             onClick={onOpenRegister}
             className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-10 bg-[#5B8731] hover:bg-[#689B37] text-white font-mono font-black text-sm sm:text-base uppercase tracking-wider border-4 border-t-[#85B745] border-l-[#85B745] border-r-[#2C4813] border-b-[#2C4813] active:border-t-[#2C4813] active:border-l-[#2C4813] active:border-r-[#85B745] active:border-b-[#85B745] shadow-[4px_4px_0px_#000] [text-shadow:_2px_2px_0_#000] flex items-center justify-center gap-2 cursor-pointer transition-colors"
           >
-            <span>REGISTER YOUR TEAM NOW</span>
+            <span>{registerLabel}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -72,7 +82,7 @@ export default function FinalCTA({ onOpenRegister }: FinalCTAProps) {
             className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 bg-[#707070] hover:bg-[#808080] text-white font-mono font-black text-sm sm:text-base uppercase tracking-wider border-4 border-t-[#9E9E9E] border-l-[#9E9E9E] border-r-[#383838] border-b-[#383838] active:border-t-[#383838] active:border-l-[#383838] active:border-r-[#9E9E9E] active:border-b-[#9E9E9E] shadow-[4px_4px_0px_#000] [text-shadow:_2px_2px_0_#000] flex items-center justify-center gap-2 cursor-pointer transition-colors"
           >
             <Terminal className="w-4 h-4 text-[#55FF55]" />
-            <span>BROWSE PROBLEM STATEMENTS</span>
+            <span>{browseLabel}</span>
           </button>
         </div>
       </div>

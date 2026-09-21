@@ -10,7 +10,7 @@ export default function Teams() {
   return (
     <section
       id="teams"
-      className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative overflow-hidden"
+      className="py-16 sm:py-24 px-4 sm:px-6 md:px-12 bg-transparent relative z-[2]"
     >
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -27,7 +27,7 @@ export default function Teams() {
           </p>
         </div>
 
-        {/* Team Names Grid — name only */}
+        {/* Team Names Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {displayTeams.map((team, idx) => (
             <motion.div
@@ -36,7 +36,7 @@ export default function Teams() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="relative group p-4 border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 bg-[#0d1117]/80 hover:bg-[#D4AF37]/5 transition-all duration-200 sf-clip-angled-sm"
+              className="relative group p-4 border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 bg-[#0d1117]/85 hover:bg-[#D4AF37]/5 transition-all duration-200 sf-clip-angled-sm backdrop-blur-sm"
             >
               {/* Number */}
               <span className="block font-rajdhani text-[10px] text-[#D4AF37]/50 tracking-[0.25em] uppercase font-bold mb-1">

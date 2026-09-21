@@ -1,15 +1,23 @@
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { useState, useRef } from 'react';
+import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 import { Shield, X, ExternalLink, Gift, Sparkles, Lock } from 'lucide-react';
 import { SPONSORS } from '../data/hackfestData';
 import { useSiteContent } from '../context/ContentContext';
 
 export default function Sponsors() {
   const { content } = useSiteContent();
+  const sectionRef = useRef<HTMLElement>(null);
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [partnerEmail, setPartnerEmail] = useState('');
   const [partnerOrg, setPartnerOrg] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['-8%', '8%']);
+  const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.04, 1.1]);
 
   const isLocked = content?.eventControl?.sponsorsLocked === true;
   const lockedMsg = content?.eventControl?.sponsorsLockedMessage || "SPONSOR ALLIANCES ARE CURRENTLY CLASSIFIED. OFFICIAL PARTNERS WILL BE UNVEILED CLOSER TO LAUNCH.";
@@ -52,9 +60,28 @@ export default function Sponsors() {
   return (
     <section
       id="sponsors"
+      ref={sectionRef}
       className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative overflow-hidden"
+      style={{ isolation: 'isolate' }}
     >
-      <div className="max-w-7xl mx-auto relative z-10">
+      {/* Bamboo Forest Duel Background with Parallax */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <motion.img
+          src="/assets/bg_sponsors_bamboo_duel.jpg"
+          alt="Bamboo Forest Duel Background"
+          style={{ y: bgY, scale: bgScale }}
+          className="absolute left-0 top-[-8%] w-full h-[116%] object-cover object-center opacity-95 brightness-[0.84] contrast-[1.12] saturate-[1.2] will-change-transform"
+        />
+        {/* Soft top gradient transition */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#050505] via-[#050505]/40 to-transparent" />
+        {/* Soft bottom gradient transition */}
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+        {/* Edge vignette */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/50 via-transparent to-[#050505]/50" />
+        {/* Subtle green glow matching the bamboo/teal palette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_50%_at_50%_50%,rgba(80,220,100,0.06),transparent)]" />
+      </div>
+      <div className="max-w-7xl mx-auto relative z-[2]">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-14 gap-6">
           <div>
@@ -116,7 +143,7 @@ export default function Sponsors() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="bg-[#2B2B2B] border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[6px_6px_0px_#000] flex flex-col justify-between relative group hover:-translate-y-1 transition-transform"
+              className="bg-[#141418]/85 backdrop-blur-md border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[6px_6px_0px_#000] flex flex-col justify-between relative group hover:-translate-y-1 transition-transform"
             >
               <div>
                 {/* Top Badge & Tier Icon */}

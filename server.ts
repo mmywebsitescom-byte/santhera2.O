@@ -133,7 +133,7 @@ app.post('/api/admin/login', (req, res) => {
   const { email, password } = req.body || {};
   const currentPass = getAdminPassword();
   const currentEmail = getAdminEmail();
-  
+
   const passwordMatches = password === currentPass;
   const emailMatches = !email || email.trim().toLowerCase() === currentEmail;
 

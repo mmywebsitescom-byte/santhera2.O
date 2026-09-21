@@ -10,8 +10,7 @@ import Challenges from './components/Challenges';
 import Arsenal from './components/Arsenal';
 import HowItWorks from './components/HowItWorks';
 import Timeline from './components/Timeline';
-import Prizes from './components/Prizes';
-import Teams from './components/Teams';
+import PrizesAndTeamsSection from './components/PrizesAndTeamsSection';
 import GalleryPage from './components/Gallery';
 import Sponsors from './components/Sponsors';
 import FAQ from './components/FAQ';
@@ -230,8 +229,7 @@ function MainApp() {
             <Arsenal />
             <HowItWorks />
             <Timeline />
-            <Prizes />
-            <Teams />
+            <PrizesAndTeamsSection />
             <Sponsors />
             <FAQ />
             <FinalCTA onOpenRegister={handleOpenRegister} />

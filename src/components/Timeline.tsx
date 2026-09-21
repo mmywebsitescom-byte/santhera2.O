@@ -1,20 +1,12 @@
-import { useState, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
-import { Clock, Calendar, CheckSquare, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Clock, Sparkles } from 'lucide-react';
 import { TIMELINE_EVENTS } from '../data/hackfestData';
 import { useSiteContent } from '../context/ContentContext';
 
 export default function Timeline() {
   const { content } = useSiteContent();
   const [selectedDay, setSelectedDay] = useState<'ALL' | 'DAY 01' | 'DAY 02' | 'DAY 03'>('ALL');
-  const sectionRef = useRef<HTMLElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  });
-  const bgY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-  const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.12, 1.05, 1.12]);
 
   const allEvents = (content.timeline && content.timeline.length > 0)
     ? content.timeline.map((evt, idx) => ({
@@ -34,20 +26,8 @@ export default function Timeline() {
   return (
     <section
       id="timeline"
-      ref={sectionRef}
       className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative overflow-hidden"
-      style={{ isolation: 'isolate' }}
     >
-      {/* Cinematic Mountain Bridge Battle Background with Parallax Scroll */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
-        <motion.img
-          src="/assets/bg_shadow_fight_bridge.jpg"
-          alt="Mountain Bridge Battle Background"
-          style={{ y: bgY, scale: bgScale }}
-          className="w-full h-[124%] -top-[12%] absolute inset-0 object-cover object-center opacity-90 brightness-[0.75] contrast-[1.1] saturate-[1.2] will-change-transform"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#07090c]/60 via-transparent to-[#07090c]/60" />
-      </div>
 
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Header */}

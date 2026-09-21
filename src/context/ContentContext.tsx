@@ -194,6 +194,34 @@ export interface SiteContent {
     passcode?: string;
     [key: string]: unknown;
   };
+  arsenal?: Array<{
+    id: string;
+    name: string;
+    category: string;
+    tier: string;
+    icon: string;
+    description: string;
+    adoption: number;
+    [key: string]: unknown;
+  }>;
+  howItWorks?: Array<{
+    id: string;
+    number: string;
+    title: string;
+    tagline: string;
+    description: string;
+    iconName: string;
+    [key: string]: unknown;
+  }>;
+  finalCta?: {
+    badge?: string;
+    title?: string;
+    titleAccent?: string;
+    description?: string;
+    registerLabel?: string;
+    browseLabel?: string;
+    [key: string]: unknown;
+  };
   registrations?: Array<Record<string, unknown>>;
   [key: string]: unknown;
 }
@@ -508,6 +536,34 @@ export const initialFallbackContent: SiteContent = {
     email: "techxerahack@gmail.com",
     passcode: "Techxera@gmail.2026"
   },
+  arsenal: [
+    { id: 'ars-react', name: 'React 19 & Next.js', category: 'FRAMEWORKS', tier: 'Legendary', icon: 'Atom', description: 'Ultra-low latency reactive rendering engines with server actions and edge streaming.', adoption: 94 },
+    { id: 'ars-ts', name: 'TypeScript & Node.js', category: 'SYSTEMS & LANGUAGES', tier: 'Legendary', icon: 'FileCode2', description: 'Strict compile-time type safety with asynchronous non-blocking runtime event loops.', adoption: 96 },
+    { id: 'ars-python', name: 'Python & PyTorch', category: 'AI & AGENTS', tier: 'Legendary', icon: 'Binary', description: 'Tensor computation kernels with GPU acceleration for training and quantized inference.', adoption: 99 },
+    { id: 'ars-rust', name: 'Rust & C++', category: 'SYSTEMS & LANGUAGES', tier: 'Legendary', icon: 'Flame', description: 'Zero-cost abstractions and memory safety without garbage collection for high-frequency compute.', adoption: 98 },
+    { id: 'ars-agents', name: 'Gemini 1.5 & AI Agents', category: 'AI & AGENTS', tier: 'Epic', icon: 'BrainCircuit', description: 'Multi-modal reasoning pipelines with 1M+ context window and autonomous tool execution.', adoption: 97 },
+    { id: 'ars-supabase', name: 'Supabase & PostgreSQL', category: 'DATA & CLOUD', tier: 'Epic', icon: 'Database', description: 'Distributed relational store with real-time change data capture, vector extensions, and auth.', adoption: 91 },
+    { id: 'ars-docker', name: 'Docker & Kubernetes', category: 'DATA & CLOUD', tier: 'Epic', icon: 'Layers', description: 'Immutable containerization for hermetic, reproducible cloud cluster orchestration.', adoption: 93 },
+    { id: 'ars-ros', name: 'ROS 2 & WebSockets', category: 'SYSTEMS & LANGUAGES', tier: 'Rare', icon: 'Radio', description: 'Real-time robotics communication middleware for sensory streams and actuator telemetry.', adoption: 89 }
+  ],
+  howItWorks: [
+    { id: 'hiw-01', number: '01', title: 'REGISTER', tagline: 'Enter the Shadow Arena', description: 'Claim your individual warrior credentials or recruit your preliminary cohort. Pass the screening gate to receive your encrypted arena pass.', iconName: 'UserCheck' },
+    { id: 'hiw-02', number: '02', title: 'FORM YOUR SQUAD', tagline: 'Assemble 1 to 4 Warriors', description: 'Harmonize complemental combat skillsets across algorithmic intelligence, systems engineering, cryptography, and tactile interface craft.', iconName: 'Users' },
+    { id: 'hiw-03', number: '03', title: 'CHOOSE YOUR BATTLEGROUND', tagline: 'Lock In One of 5 Arenas', description: 'Select your frontline domain: AI & Machine Learning, Digital Infrastructure, Cybersecurity, Cyber-Physical Robotics, or Open Innovation.', iconName: 'Crosshair' },
+    { id: 'hiw-04', number: '04', title: 'BUILD', tagline: '48 Hours of Relentless Combat', description: 'Execute under the pressure of the clock. Forge architecture, write production tests, and deploy resilient containers with zero downtime.', iconName: 'Cpu' },
+    { id: 'hiw-05', number: '05', title: 'GET MENTORED', tagline: 'Guidance from the Masters', description: 'Engage with veteran architects, distinguished researchers, and venture scouts to stress-test your design, throughput, and thesis.', iconName: 'Sparkles' },
+    { id: 'hiw-06', number: '06', title: 'SUBMIT', tagline: 'Code Freeze & Repositories Locked', description: 'Commit your final builds to the immutable ledger. Verify live deployment endpoints, architectural blueprints, and demonstration videos.', iconName: 'ShieldCheck' },
+    { id: 'hiw-07', number: '07', title: 'FACE THE FINAL JUDGING', tagline: 'Mainstage Showdown', description: 'Top squads demonstrate functioning prototypes live on the mainstage arena, facing rapid cross-examination from master judges.', iconName: 'Swords' },
+    { id: 'hiw-08', number: '08', title: 'BECOME A CHAMPION', tagline: 'Glory & Prize Grant', description: 'Stand on the grand podium. Secure direct capital grants, cloud clusters, VC term-sheet pitches, and immortalize your squad.', iconName: 'Trophy' }
+  ],
+  finalCta: {
+    badge: "OFFLINE REGISTRATION WINDOW IS LIVE",
+    title: "READY TO ENTER",
+    titleAccent: "THE HACKVERSE?",
+    description: "October 16, 2026 at Government College of Engineering Kalahandi. 24 hours of non-stop building, classified quests, and ₹1,50,000+ in rewards.",
+    registerLabel: "REGISTER YOUR TEAM NOW",
+    browseLabel: "BROWSE PROBLEM STATEMENTS"
+  },
   registrations: []
 };
 
@@ -558,6 +614,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
           teams: Array.isArray(data.teams) ? data.teams : prev.teams,
           faq: Array.isArray(data.faq) ? data.faq : prev.faq,
+          arsenal: Array.isArray(data.arsenal) ? data.arsenal : prev.arsenal,
+          howItWorks: Array.isArray(data.howItWorks) ? data.howItWorks : prev.howItWorks,
+          finalCta: { ...prev.finalCta, ...(data.finalCta || {}) },
         }));
         setLoading(false);
         return;
@@ -592,6 +651,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
             teams: Array.isArray(data.teams) ? data.teams : prev.teams,
             faq: Array.isArray(data.faq) ? data.faq : prev.faq,
+            arsenal: Array.isArray(data.arsenal) ? data.arsenal : prev.arsenal,
+            howItWorks: Array.isArray(data.howItWorks) ? data.howItWorks : prev.howItWorks,
+            finalCta: { ...prev.finalCta, ...(data.finalCta || {}) },
           }));
         }
       }
@@ -636,6 +698,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 loadingScreen: { ...prev.loadingScreen, ...(data.loadingScreen || {}) },
                 teams: Array.isArray(data.teams) ? data.teams : prev.teams,
                 faq: Array.isArray(data.faq) ? data.faq : prev.faq,
+                arsenal: Array.isArray(data.arsenal) ? data.arsenal : prev.arsenal,
+                howItWorks: Array.isArray(data.howItWorks) ? data.howItWorks : prev.howItWorks,
+                finalCta: { ...prev.finalCta, ...(data.finalCta || {}) },
               }));
             } else {
               refreshContent();

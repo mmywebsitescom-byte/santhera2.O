@@ -8,7 +8,7 @@ import {
   Search, Download, ExternalLink, Activity, ClipboardList, Key,
   Clock, Layers, Sparkles, Navigation, CheckSquare, Upload, Image, Swords, Eye, Terminal
 } from "lucide-react";
-import { useSiteContent } from "../context/ContentContext";
+import { useSiteContent, initialFallbackContent } from "../context/ContentContext";
 import { supabase, uploadMediaToSupabase } from "../lib/supabase";
 import { toBoldScript } from "../lib/fontUtils";
 import ChallengeModal from "./ChallengeModal";
@@ -35,6 +35,9 @@ type Section =
   | "teams" 
   | "faq" 
   | "sponsors"
+  | "arsenal"
+  | "howItWorks"
+  | "finalCta"
   | "footer"
   | "adminSecurity"
   | "rawJson";
@@ -89,6 +92,20 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [previewModalChallenge, setPreviewModalChallenge] = useState<Challenge | null>(null);
 
   const fetchContent = useCallback(async () => {
+    // Helper: merge fetched data onto defaults so new sections always have values
+    const mergeWithDefaults = (data: Record<string, any>): Record<string, any> => ({
+      ...initialFallbackContent,
+      ...data,
+      // Always prefer stored arrays if they exist, otherwise keep defaults
+      arsenal: Array.isArray(data.arsenal) && data.arsenal.length > 0
+        ? data.arsenal
+        : initialFallbackContent.arsenal,
+      howItWorks: Array.isArray(data.howItWorks) && data.howItWorks.length > 0
+        ? data.howItWorks
+        : initialFallbackContent.howItWorks,
+      finalCta: { ...initialFallbackContent.finalCta, ...(data.finalCta || {}) },
+    });
+
     // 1. Try Supabase first
     try {
       const { data: sbRow } = await supabase
@@ -99,9 +116,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
       if (sbRow?.content && typeof sbRow.content === 'object') {
         const data = sbRow.content as Record<string, any>;
-        setContent(data);
-        setEditData(data);
-        setRawJsonText(JSON.stringify(data, null, 2));
+        const merged = mergeWithDefaults(data);
+        setContent(merged);
+        setEditData(merged);
+        setRawJsonText(JSON.stringify(merged, null, 2));
         return;
       }
     } catch (e) {
@@ -113,9 +131,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       const res = await fetch(`${API_BASE}/content`);
       if (res.ok) {
         const data = await res.json();
-        setContent(data);
-        setEditData(data);
-        setRawJsonText(JSON.stringify(data, null, 2));
+        const merged = mergeWithDefaults(data);
+        setContent(merged);
+        setEditData(merged);
+        setRawJsonText(JSON.stringify(merged, null, 2));
       }
     } catch (e) {
       console.error("Failed to fetch admin content", e);
@@ -606,6 +625,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     { key: "teams", label: "Featured Squads", icon: <Users className="w-4 h-4" /> },
     { key: "faq", label: "Rules & FAQ Base", icon: <HelpCircle className="w-4 h-4" /> },
     { key: "sponsors", label: "Sponsors & Allies", icon: <Shield className="w-4 h-4" /> },
+    { key: "arsenal", label: "Developer Arsenal", icon: <Terminal className="w-4 h-4 text-[#55FF55]" /> },
+    { key: "howItWorks", label: "Builder Pathway", icon: <Layers className="w-4 h-4 text-[#FFAA00]" /> },
+    { key: "finalCta", label: "Final CTA Section", icon: <Sparkles className="w-4 h-4 text-[#55FF55]" /> },
     { key: "footer", label: "Footer & Coordinates", icon: <Globe className="w-4 h-4" /> },
     { key: "adminSecurity", label: "Security & Passcode", icon: <Key className="w-4 h-4" /> },
     { key: "rawJson", label: "Full Database JSON", icon: <Code2 className="w-4 h-4" /> },
@@ -692,6 +714,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const teams: any[] = Array.isArray(editData.teams) ? editData.teams : [];
   const faq: any[] = Array.isArray(editData.faq) ? editData.faq : [];
   const sponsors: any[] = Array.isArray(editData.sponsors) ? editData.sponsors : [];
+  const arsenalItems: any[] = Array.isArray(editData.arsenal) ? editData.arsenal : [];
+  const howItWorksSteps: any[] = Array.isArray(editData.howItWorks) ? editData.howItWorks : [];
+  const finalCta = editData.finalCta || {};
 
   const filteredRegistrations = registrations.filter((r) => {
     if (!regSearch) return true;
@@ -1210,12 +1235,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               </div>
 
               {/* Live Preview of Loading Screen */}
-              <div className="p-6 border border-[#D4AF37]/30 bg-[#040608] sf-clip-angled-sm text-center relative overflow-hidden">
-                <div className="absolute top-2 right-3 font-mono text-[10px] text-neutral-500 uppercase">
+              <div className="p-6 border border-[#D4AF37]/30 bg-[#040608] sf-clip-angled-sm text-center relative overflow-hidden" style={{ isolation: 'isolate' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+                  <img
+                    src="/assets/bg_pathway_mountain_village.jpg"
+                    alt="Loading Screen Background Preview"
+                    className="w-full h-full object-cover object-center opacity-90 brightness-[0.88]"
+                  />
+                  <div className="absolute inset-0 bg-black/40" />
+                </div>
+
+                <div className="absolute top-2 right-3 font-mono text-[10px] text-neutral-300 uppercase z-10">
                   [ LIVE PREVIEW ]
                 </div>
 
-                <div className="py-6 flex flex-col items-center justify-center space-y-4">
+                <div className="py-6 flex flex-col items-center justify-center space-y-4 relative z-10">
                   {/* Badge */}
                   <div className="flex items-center gap-2">
                     <span className="block w-5 h-[1px] bg-[#D4AF37]/50" />
@@ -4487,6 +4521,248 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 >
                   <Save className="w-4 h-4" />
                   <span>SAVE SPONSORS</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 16. DEVELOPER ARSENAL */}
+          {activeSection === "arsenal" && (
+            <div className="space-y-6 max-w-5xl">
+              <div className="p-4 border border-[#55FF55]/30 bg-[#0c1017] sf-clip-angled-sm">
+                <p className="font-rajdhani text-xs text-neutral-300 leading-relaxed">
+                  Edit the <strong className="text-[#55FF55]">Developer Arsenal</strong> cards shown in the tech stack section. Each card has a name, category, tier, icon, description, and adoption percentage.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {arsenalItems.map((item: any, idx: number) => (
+                  <div key={item.id || idx} className="p-4 border border-[#D4AF37]/30 bg-[#0d121b] sf-clip-angled-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-cinzel text-xs font-bold text-[#55FF55] uppercase tracking-wider">ITEM {idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = arsenalItems.filter((_: any, i: number) => i !== idx);
+                          setEditData({ ...editData, arsenal: updated });
+                        }}
+                        className="p-1 border border-[#FF4655]/40 hover:bg-[#FF4655]/20 text-[#FF4655] cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Name</label>
+                        <input type="text" value={item.name || ''} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], name: e.target.value }; setEditData({ ...editData, arsenal: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Category</label>
+                        <input type="text" value={item.category || ''} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], category: e.target.value }; setEditData({ ...editData, arsenal: u }); }} placeholder="AI & AGENTS / FRAMEWORKS / etc." className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Tier</label>
+                        <input type="text" value={item.tier || ''} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], tier: e.target.value }; setEditData({ ...editData, arsenal: u }); }} placeholder="Legendary / Epic / Rare" className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Icon Name</label>
+                        <input type="text" value={item.icon || ''} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], icon: e.target.value }; setEditData({ ...editData, arsenal: u }); }} placeholder="Atom / FileCode2 / Binary / Flame / BrainCircuit / Database / Layers / Radio" className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-mono" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Adoption %</label>
+                        <input type="number" min="0" max="100" value={item.adoption ?? 90} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], adoption: parseInt(e.target.value) || 0 }; setEditData({ ...editData, arsenal: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Description</label>
+                        <textarea rows={2} value={item.description || ''} onChange={(e) => { const u = [...arsenalItems]; u[idx] = { ...u[idx], description: e.target.value }; setEditData({ ...editData, arsenal: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani resize-none" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const newItem = { id: `ars-${Date.now()}`, name: 'NEW TOOL', category: 'FRAMEWORKS', tier: 'Rare', icon: 'Zap', description: 'Description here.', adoption: 80 };
+                  setEditData({ ...editData, arsenal: [...arsenalItems, newItem] });
+                }}
+                className="px-5 py-2 border border-[#55FF55]/50 hover:bg-[#55FF55]/10 text-[#55FF55] font-rajdhani text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                ADD ARSENAL ITEM
+              </button>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => handleSaveSection("arsenal", editData.arsenal)}
+                  className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>SAVE DEVELOPER ARSENAL</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 17. BUILDER PATHWAY (HOW IT WORKS) */}
+          {activeSection === "howItWorks" && (
+            <div className="space-y-6 max-w-5xl">
+              <div className="p-4 border border-[#FFAA00]/30 bg-[#0c1017] sf-clip-angled-sm">
+                <p className="font-rajdhani text-xs text-neutral-300 leading-relaxed">
+                  Edit the <strong className="text-[#FFAA00]">Builder Pathway</strong> phase cards. Each card has a phase number, title, tagline, description, and icon.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {howItWorksSteps.map((step: any, idx: number) => (
+                  <div key={step.id || idx} className="p-4 border border-[#D4AF37]/30 bg-[#0d121b] sf-clip-angled-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-cinzel text-xs font-bold text-[#FFAA00] uppercase tracking-wider">PHASE {step.number || (idx + 1)}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = howItWorksSteps.filter((_: any, i: number) => i !== idx);
+                          setEditData({ ...editData, howItWorks: updated });
+                        }}
+                        className="p-1 border border-[#FF4655]/40 hover:bg-[#FF4655]/20 text-[#FF4655] cursor-pointer"
+                        title="Remove step"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Phase Number</label>
+                        <input type="text" value={step.number || ''} onChange={(e) => { const u = [...howItWorksSteps]; u[idx] = { ...u[idx], number: e.target.value }; setEditData({ ...editData, howItWorks: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Title</label>
+                        <input type="text" value={step.title || ''} onChange={(e) => { const u = [...howItWorksSteps]; u[idx] = { ...u[idx], title: e.target.value }; setEditData({ ...editData, howItWorks: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Tagline</label>
+                        <input type="text" value={step.tagline || ''} onChange={(e) => { const u = [...howItWorksSteps]; u[idx] = { ...u[idx], tagline: e.target.value }; setEditData({ ...editData, howItWorks: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani" />
+                      </div>
+                      <div>
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Icon Name</label>
+                        <input type="text" value={step.iconName || ''} onChange={(e) => { const u = [...howItWorksSteps]; u[idx] = { ...u[idx], iconName: e.target.value }; setEditData({ ...editData, howItWorks: u }); }} placeholder="UserCheck / Users / Crosshair / Cpu / Sparkles / ShieldCheck / Swords / Trophy" className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-mono" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block font-rajdhani text-[10px] font-bold text-[#F5D061] uppercase tracking-wider mb-1">Description</label>
+                        <textarea rows={2} value={step.description || ''} onChange={(e) => { const u = [...howItWorksSteps]; u[idx] = { ...u[idx], description: e.target.value }; setEditData({ ...editData, howItWorks: u }); }} className="w-full bg-[#141b26] border border-[#D4AF37]/30 text-white p-2 text-xs font-rajdhani resize-none" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const n = howItWorksSteps.length + 1;
+                  const newStep = { id: `hiw-${Date.now()}`, number: String(n).padStart(2,'0'), title: 'NEW PHASE', tagline: 'Phase tagline', description: 'Description here.', iconName: 'Flame' };
+                  setEditData({ ...editData, howItWorks: [...howItWorksSteps, newStep] });
+                }}
+                className="px-5 py-2 border border-[#FFAA00]/50 hover:bg-[#FFAA00]/10 text-[#FFAA00] font-rajdhani text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                ADD PHASE
+              </button>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => handleSaveSection("howItWorks", editData.howItWorks)}
+                  className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>SAVE BUILDER PATHWAY</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 18. FINAL CTA SECTION */}
+          {activeSection === "finalCta" && (
+            <div className="space-y-5 max-w-4xl">
+              <div className="p-4 border border-[#55FF55]/30 bg-[#0c1017] sf-clip-angled-sm">
+                <p className="font-rajdhani text-xs text-neutral-300 leading-relaxed">
+                  Edit the <strong className="text-[#55FF55]">Final CTA section</strong> — the last full-screen page with the "READY TO ENTER THE HACKVERSE?" banner and action buttons.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">Status Badge Text</label>
+                  <input
+                    type="text"
+                    value={finalCta.badge || ''}
+                    onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, badge: e.target.value } })}
+                    placeholder="OFFLINE REGISTRATION WINDOW IS LIVE"
+                    className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-sm font-rajdhani focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">Main Title (white)</label>
+                  <input
+                    type="text"
+                    value={finalCta.title || ''}
+                    onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, title: e.target.value } })}
+                    placeholder="READY TO ENTER"
+                    className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-sm font-rajdhani focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-rajdhani text-xs font-bold text-[#55FF55] uppercase tracking-wider mb-1">Title Accent (green)</label>
+                  <input
+                    type="text"
+                    value={finalCta.titleAccent || ''}
+                    onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, titleAccent: e.target.value } })}
+                    placeholder="THE HACKVERSE?"
+                    className="w-full bg-[#111722] border border-[#55FF55]/30 text-[#55FF55] p-2.5 text-sm font-rajdhani focus:border-[#55FF55] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">Register Button Label</label>
+                  <input
+                    type="text"
+                    value={finalCta.registerLabel || ''}
+                    onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, registerLabel: e.target.value } })}
+                    placeholder="REGISTER YOUR TEAM NOW"
+                    className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-sm font-rajdhani focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">Browse Button Label</label>
+                  <input
+                    type="text"
+                    value={finalCta.browseLabel || ''}
+                    onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, browseLabel: e.target.value } })}
+                    placeholder="BROWSE PROBLEM STATEMENTS"
+                    className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-sm font-rajdhani focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-rajdhani text-xs font-bold text-[#F5D061] uppercase tracking-wider mb-1">Description Text</label>
+                <textarea
+                  rows={3}
+                  value={finalCta.description || ''}
+                  onChange={(e) => setEditData({ ...editData, finalCta: { ...finalCta, description: e.target.value } })}
+                  placeholder="October 16, 2026 at Government College of Engineering Kalahandi..."
+                  className="w-full bg-[#111722] border border-[#D4AF37]/30 text-white p-2.5 text-sm font-rajdhani focus:border-[#D4AF37] outline-none resize-none"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => handleSaveSection("finalCta", editData.finalCta)}
+                  className="px-6 py-2.5 sf-btn-gold sf-clip-angled font-cinzel text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>SAVE FINAL CTA</span>
                 </button>
               </div>
             </div>

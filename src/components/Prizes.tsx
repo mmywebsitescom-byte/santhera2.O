@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion } from 'motion/react';
 import { Trophy, Award, Medal, Gift, Sparkles } from 'lucide-react';
 import { EVENT_INFO } from '../data/hackfestData';
 import { useSiteContent } from '../context/ContentContext';
@@ -8,34 +7,13 @@ export default function Prizes() {
   const { content } = useSiteContent();
   const prizes = content?.prizes || {};
   const totalPrizePool = prizes.poolTotal || EVENT_INFO.stats.prizePool || '₹1,50,000+';
-  const sectionRef = useRef<HTMLElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  });
-  const bgY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-  const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.12, 1.05, 1.12]);
 
   return (
     <section
       id="prizes"
-      ref={sectionRef}
-      className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative overflow-hidden"
-      style={{ isolation: 'isolate' }}
+      className="py-20 sm:py-24 px-4 sm:px-6 md:px-12 bg-transparent relative z-[2]"
     >
-      {/* Cinematic Neon Warriors Clash Background with Parallax Scroll */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
-        <motion.img
-          src="/assets/bg_shadow_fight_neon.jpg"
-          alt="Neon Warriors Clash Background"
-          style={{ y: bgY, scale: bgScale }}
-          className="w-full h-[124%] -top-[12%] absolute inset-0 object-cover object-center opacity-90 brightness-[0.7] contrast-[1.15] saturate-[1.5] will-change-transform"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#07090c]/60 via-transparent to-[#07090c]/60" />
-      </div>
-
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-[2]">
         {/* HackVerse Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
@@ -58,7 +36,7 @@ export default function Prizes() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-8 bg-[#2B2B2B] border-4 border-t-[#FFE285] border-l-[#FFE285] border-r-[#8F5500] border-b-[#8F5500] p-6 sm:p-8 shadow-[6px_6px_0px_#000] relative overflow-hidden"
+          className="mb-8 bg-[#141418]/85 backdrop-blur-md border-4 border-t-[#FFE285] border-l-[#FFE285] border-r-[#8F5500] border-b-[#8F5500] p-6 sm:p-8 shadow-[6px_6px_0px_#000] relative overflow-hidden"
         >
           {/* Subtle amber glow in center */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#FFAA00]/15 rounded-full blur-3xl pointer-events-none" />
@@ -115,7 +93,7 @@ export default function Prizes() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-[#2B2B2B] border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between"
+            className="bg-[#141418]/85 backdrop-blur-md border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between hover:-translate-y-1 transition-transform"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -155,7 +133,7 @@ export default function Prizes() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="bg-[#2B2B2B] border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between"
+            className="bg-[#141418]/85 backdrop-blur-md border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between hover:-translate-y-1 transition-transform"
           >
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -195,7 +173,7 @@ export default function Prizes() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-[#2B2B2B] border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between"
+            className="bg-[#141418]/85 backdrop-blur-md border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between hover:-translate-y-1 transition-transform"
           >
             <div>
               <div className="flex items-center justify-between mb-3">

@@ -12,16 +12,26 @@ import {
   Zap,
   Terminal
 } from 'lucide-react';
+import { useSiteContent } from '../context/ContentContext';
 import { ARSENAL_ITEMS } from '../data/hackfestData';
 
 export default function Arsenal() {
+  const { content } = useSiteContent();
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  // Use content from admin panel if available, otherwise fall back to static data
+  const arsenalItems = Array.isArray(content?.arsenal) && content.arsenal.length > 0
+    ? content.arsenal
+    : ARSENAL_ITEMS.map((item) => ({
+        ...item,
+        adoption: item.stats?.power ?? 90,
+      }));
 
   const categories = ['ALL', 'AI & AGENTS', 'FRAMEWORKS', 'SYSTEMS & LANGUAGES', 'DATA & CLOUD'];
 
   const filteredItems = selectedCategory === 'ALL'
-    ? ARSENAL_ITEMS
-    : ARSENAL_ITEMS.filter((item) => item.category === selectedCategory);
+    ? arsenalItems
+    : arsenalItems.filter((item) => item.category === selectedCategory);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -80,7 +90,7 @@ export default function Arsenal() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {filteredItems.map((item, idx) => (
             <motion.div
-              key={item.name}
+              key={item.id || item.name}
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -111,7 +121,7 @@ export default function Arsenal() {
               </div>
 
               <div className="mt-4 pt-2.5 border-t-2 border-[#383838] flex items-center justify-between font-mono text-[10px] text-neutral-400">
-                <span>{item.stats.power}% ADOPTION</span>
+                <span>{(item.adoption ?? (item as any).stats?.power ?? 90)}% ADOPTION</span>
                 <span className="text-[#55FF55]">SUPPORTED</span>
               </div>
             </motion.div>

@@ -84,6 +84,24 @@ export default function Stats() {
   const { content } = useSiteContent();
   const stats = content?.stats || {};
 
+  // Parse prize pool value dynamically from content
+  // e.g. "₹1.5L+" → 1.5, "2L+" → 2, "₹2,50,000+" → extract numeric portion
+  const parsePrizePool = (val: string): { prefix: string; num: number; suffix: string } => {
+    if (!val) return { prefix: '₹', num: 1.5, suffix: 'L+' };
+    // Try to extract prefix (currency symbol), number, and suffix
+    const match = val.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
+    if (match) {
+      return {
+        prefix: match[1] || '₹',
+        num: parseFloat(match[2]) || 1.5,
+        suffix: match[3] || 'L+',
+      };
+    }
+    return { prefix: '₹', num: 1.5, suffix: 'L+' };
+  };
+
+  const { prefix: poolPrefix, num: poolNum, suffix: poolSuffix } = parsePrizePool(stats.prizePool);
+
   return (
     <section id="stats" className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative">
       <div className="max-w-7xl mx-auto">
@@ -124,11 +142,11 @@ export default function Stats() {
             icon={Flame}
           />
           <StatItem
-            target={1.5}
-            prefix="₹"
-            suffix="L+"
-            label={stats.prizePoolLabel || "STATE PRIZES"}
-            sublabel={stats.prizePoolSub || "CASH & GRANTS"}
+            target={poolNum}
+            prefix={poolPrefix}
+            suffix={poolSuffix}
+            label={stats.prizePoolLabel || "TOTAL BOUNTY POOL"}
+            sublabel={stats.prizePoolSub || "GRANTS & CREDITS"}
             icon={Trophy}
           />
         </div>

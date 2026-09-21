@@ -1,4 +1,5 @@
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { 
   UserCheck, 
   Users, 
@@ -11,9 +12,27 @@ import {
   Flame,
   Terminal
 } from 'lucide-react';
+import { useSiteContent } from '../context/ContentContext';
 import { HOW_IT_WORKS_STEPS } from '../data/hackfestData';
 
 export default function HowItWorks() {
+  const { content } = useSiteContent();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Use content from admin panel if available, otherwise fall back to static data
+  const steps = Array.isArray(content?.howItWorks) && content.howItWorks.length > 0
+    ? content.howItWorks
+    : HOW_IT_WORKS_STEPS;
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+
+  // Parallax transforms for background
+  const bgY = useTransform(scrollYProgress, [0, 1], ['-8%', '8%']);
+  const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.04, 1.1]);
+
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'UserCheck': return <UserCheck className="w-4 h-4 text-[#55FF55]" />;
@@ -31,9 +50,29 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
+      ref={sectionRef}
       className="py-20 sm:py-28 px-4 sm:px-6 md:px-12 bg-transparent relative overflow-hidden"
+      style={{ isolation: 'isolate' }}
     >
-      <div className="max-w-7xl mx-auto relative z-10">
+      {/* Mountain Village Bridge Battle Background with Parallax */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <motion.img
+          src="/assets/bg_pathway_mountain_village.jpg"
+          alt="Mountain Village Bridge Battle Background"
+          style={{ y: bgY, scale: bgScale }}
+          className="absolute left-0 top-[-8%] w-full h-[116%] object-cover object-center opacity-95 brightness-[0.84] contrast-[1.12] saturate-[1.2] will-change-transform"
+        />
+        {/* Soft top gradient transition */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#050505] via-[#050505]/40 to-transparent" />
+        {/* Soft bottom gradient transition */}
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+        {/* Subtle lateral vignette */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/50 via-transparent to-[#050505]/50" />
+        {/* Warm golden highlight matching the battle glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_50%_at_50%_45%,rgba(255,170,0,0.06),transparent)]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-[2]">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
@@ -50,16 +89,16 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        {/* 8 Nodes Grid */}
+        {/* Steps Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {HOW_IT_WORKS_STEPS.map((step, idx) => (
+          {steps.map((step, idx) => (
             <motion.div
-              key={step.number}
+              key={(step as any).id || step.number}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: idx * 0.06 }}
-              className="bg-[#2B2B2B] border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-4 sm:p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between hover:-translate-y-1 transition-transform"
+              className="bg-[#141418]/85 border-4 border-t-[#4a4a4a] border-l-[#4a4a4a] border-r-[#151515] border-b-[#151515] p-4 sm:p-5 shadow-[4px_4px_0px_#000] flex flex-col justify-between hover:-translate-y-1 transition-transform backdrop-blur-md"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -85,7 +124,7 @@ export default function HowItWorks() {
               </div>
 
               <div className="mt-4 pt-2.5 border-t-2 border-[#383838] flex items-center justify-between font-mono text-[10px] text-neutral-400">
-                <span>STEP 0{idx + 1} OF 08</span>
+                <span>STEP 0{idx + 1} OF {String(steps.length).padStart(2, '0')}</span>
                 <span className="text-[#55FF55]">● ACTIVE</span>
               </div>
             </motion.div>

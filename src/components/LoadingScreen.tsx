@@ -89,8 +89,26 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           exit={{ opacity: 0, scale: 1.025 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[200] flex flex-col items-center justify-center select-none overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #040608 0%, #080c12 40%, #050a0f 100%)' }}
+          style={{ background: '#040608', isolation: 'isolate' }}
         >
+          {/* Cinematic Warrior Mountain Arena Background — Enhanced & Highly Visible */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+            <motion.img
+              src="/assets/bg_pathway_mountain_village.jpg"
+              alt="Warrior Battle Arena"
+              initial={{ scale: 1.05 }}
+              animate={{ scale: 1.0 }}
+              transition={{ duration: Math.max(3, totalDuration / 1000), ease: 'easeOut' }}
+              className="w-full h-full object-cover object-center opacity-100 brightness-[0.92] contrast-[1.1] saturate-[1.15]"
+            />
+            {/* Subtle cinematic ambient wash — keeps warriors clear while ensuring typography contrast */}
+            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#040608]/80 via-[#040608]/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#040608]/85 via-[#040608]/40 to-transparent" />
+            {/* Golden battle glow accent in center matching the spark clash */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_45%,rgba(255,170,0,0.08),transparent)]" />
+          </div>
+
           {/* Ambient deep gold glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(ellipse, rgba(212,175,55,0.07) 0%, transparent 70%)' }}

@@ -52,17 +52,17 @@
   },
   "stats": {
     "hours": "12H",
-    "hoursLabel": "COMBAT DURATION",
-    "hoursSub": "NON-STOP SPRINT",
-    "prizePool": "₹11",
-    "prizePoolLabel": "TOTAL BOUNTY POOL",
-    "prizePoolSub": "GRANTS & CREDITS",
-    "hackers": "200+",
-    "hackersLabel": "ELITE WARRIORS",
-    "hackersSub": "SELECTIVE SCREENING",
     "tracks": "5",
+    "hackers": "200+",
+    "hoursSub": "NON-STOP SPRINT",
+    "prizePool": "₹10,000 k",
+    "tracksSub": "CROSS-DOMAIN",
+    "hackersSub": "SELECTIVE SCREENING",
+    "hoursLabel": "COMBAT DURATION",
     "tracksLabel": "BATTLEGROUND TRACKS",
-    "tracksSub": "CROSS-DOMAIN"
+    "hackersLabel": "ELITE WARRIORS",
+    "prizePoolSub": "GRANTS & CREDITS",
+    "prizePoolLabel": "TOTAL BOUNTY POOL"
   },
   "prizes": {
     "poolTotal": "₹10,000+",
@@ -476,5 +476,145 @@
     "titleGothic": "𝚂𝚈𝙽𝚃𝙷𝙰𝚁𝙰2.0",
     "presentsText": "TECHXERA PRESENTS"
   },
-  "registrations": []
+  "registrations": [],
+  "howItWorks": [
+    {
+      "id": "hiw-01",
+      "number": "01",
+      "title": "REGISTER",
+      "tagline": "Enter the Shadow Arena",
+      "description": "Claim your individual warrior credentials or recruit your preliminary cohort. Pass the screening gate to receive your encrypted arena pass.",
+      "iconName": "UserCheck"
+    },
+    {
+      "id": "hiw-02",
+      "number": "02",
+      "title": "FORM YOUR SQUAD",
+      "tagline": "Assemble 1 to 4 Warriors",
+      "description": "Harmonize complemental combat skillsets across algorithmic intelligence, systems engineering, cryptography, and tactile interface craft.",
+      "iconName": "Users"
+    },
+    {
+      "id": "hiw-03",
+      "number": "03",
+      "title": "CHOOSE YOUR BATTLEGROUND",
+      "tagline": "Lock In One of 5 Arenas",
+      "description": "Select your frontline domain: AI & Machine Learning, Digital Infrastructure, Cybersecurity, Cyber-Physical Robotics, or Open Innovation.",
+      "iconName": "Crosshair"
+    },
+    {
+      "id": "hiw-04",
+      "number": "04",
+      "title": "BUILD",
+      "tagline": "48 Hours of Relentless Combat",
+      "description": "Execute under the pressure of the clock. Forge architecture, write production tests, and deploy resilient containers with zero downtime.",
+      "iconName": "Cpu"
+    },
+    {
+      "id": "hiw-05",
+      "number": "05",
+      "title": "GET MENTORED",
+      "tagline": "Guidance from the Masters",
+      "description": "Engage with veteran architects, distinguished researchers, and venture scouts to stress-test your design, throughput, and thesis.",
+      "iconName": "Sparkles"
+    },
+    {
+      "id": "hiw-06",
+      "number": "06",
+      "title": "SUBMIT",
+      "tagline": "Code Freeze & Repositories Locked",
+      "description": "Commit your final builds to the immutable ledger. Verify live deployment endpoints, architectural blueprints, and demonstration videos.",
+      "iconName": "ShieldCheck"
+    },
+    {
+      "id": "hiw-07",
+      "number": "07",
+      "title": "FACE THE FINAL JUDGING",
+      "tagline": "Mainstage Showdown",
+      "description": "Top squads demonstrate functioning prototypes live on the mainstage arena, facing rapid cross-examination from master judges.",
+      "iconName": "Swords"
+    },
+    {
+      "id": "hiw-08",
+      "number": "08",
+      "title": "BECOME A CHAMPION",
+      "tagline": "Glory & Prize Grant",
+      "description": "Stand on the grand podium. Secure direct capital grants, cloud clusters, VC term-sheet pitches, and immortalize your squad.",
+      "iconName": "Trophy"
+    }
+  ],
+  "arsenal": [
+    {
+      "id": "ars-react",
+      "icon": "Atom",
+      "name": "React 19 & Next.js %aaaa",
+      "tier": "Legendary",
+      "adoption": 94,
+      "category": "FRAMEWORKS",
+      "description": "Ultra-low latency reactive rendering engines with server actions and edge streaming."
+    },
+    {
+      "id": "ars-ts",
+      "icon": "FileCode2",
+      "name": "TypeScript & Node.js",
+      "tier": "Legendary",
+      "adoption": 96,
+      "category": "SYSTEMS & LANGUAGES",
+      "description": "Strict compile-time type safety with asynchronous non-blocking runtime event loops."
+    },
+    {
+      "id": "ars-python",
+      "icon": "Binary",
+      "name": "Python & PyTorch",
+      "tier": "Legendary",
+      "adoption": 99,
+      "category": "AI & AGENTS",
+      "description": "Tensor computation kernels with GPU acceleration for training and quantized inference."
+    },
+    {
+      "id": "ars-rust",
+      "icon": "Flame %aaaa",
+      "name": "Rust & C++",
+      "tier": "Legendary",
+      "adoption": 98,
+      "category": "SYSTEMS & LANGUAGES",
+      "description": "Zero-cost abstractions and memory safety without garbage collection for high-frequency compute."
+    },
+    {
+      "id": "ars-agents",
+      "icon": "BrainCircuit",
+      "name": "Gemini 1.5 & AI Agents",
+      "tier": "Epic",
+      "adoption": 97,
+      "category": "AI & AGENTS",
+      "description": "Multi-modal reasoning pipelines with 1M+ context window and autonomous tool execution."
+    },
+    {
+      "id": "ars-supabase",
+      "icon": "Database",
+      "name": "Supabase & PostgreSQL",
+      "tier": "Epic",
+      "adoption": 91,
+      "category": "DATA & CLOUD",
+      "description": "Distributed relational store with real-time change data capture, vector extensions, and auth."
+    },
+    {
+      "id": "ars-docker",
+      "icon": "Layers",
+      "name": "Docker & Kubernetes",
+      "tier": "Epic",
+      "adoption": 93,
+      "category": "DATA & CLOUD",
+      "description": "Immutable containerization for hermetic, reproducible cloud cluster orchestration."
+    },
+    {
+      "id": "ars-ros",
+      "icon": "Radio",
+      "name": "ROS 2 & WebSockets",
+      "tier": "Rare",
+      "adoption": 89,
+      "category": "SYSTEMS & LANGUAGES",
+      "description": "Real-time robotics communication middleware for sensory streams and actuator telemetry."
+    }
+  ]
 }
